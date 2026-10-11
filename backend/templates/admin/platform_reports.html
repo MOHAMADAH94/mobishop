@@ -1,0 +1,290 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+  .rpt-wrap { direction: rtl; text-align: right; }
+  .rpt-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 16px 0 24px; }
+  .rpt-card {
+    background: var(--mobishop-surface, #fff);
+    border: 1px solid var(--mobishop-border, #e2e8f0);
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .rpt-card::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0; top: 0; bottom: 0; width: 4px;
+    background: linear-gradient(180deg, #1e40af, #2563eb);
+  }
+  .rpt-card strong { display: block; font-size: 1.4rem; margin-top: 4px; color: #1e40af; }
+  .rpt-card span { color: var(--mobishop-muted, #64748b); font-size: 0.9rem; font-weight: 700; }
+  .rpt-filters {
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-bottom: 20px; padding: 16px;
+    border: 1px solid var(--mobishop-border, #e2e8f0); border-radius: 16px;
+    background: #eff6ff;
+  }
+  .rpt-filters label { display: block; font-weight: 700; margin-bottom: 4px; font-size: 0.85rem; color: #0f172a; }
+  .rpt-filters select { min-width: 220px; }
+  .rpt-section { margin: 28px 0; }
+  .rpt-section h2 { margin-bottom: 10px; color: #1e40af; font-weight: 800; }
+  .rpt-muted { color: var(--mobishop-muted, #64748b); font-size: 0.9rem; }
+  .rpt-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #dbeafe; color: #1e40af; font-size: 0.8rem; margin-left: 6px; font-weight: 700; }
+  .rpt-badge.warn { background: #fef3c7; color: #92400e; }
+  .rpt-badge.ok { background: #d1fae5; color: #065f46; }
+  .rpt-badge.off { background: #f3f4f6; color: #6b7280; }
+  table.rpt-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; }
+  table.rpt-table th, table.rpt-table td { padding: 10px 12px; border-bottom: 1px solid #e2e8f0; text-align: right; vertical-align: top; }
+  table.rpt-table th { background: #eff6ff; color: #1e40af; font-weight: 800; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="rpt-wrap">
+  <p class="rpt-muted">عرض ارتباطات المستخدمين بالمتاجر والفروع والموظفين. اختر مستخدماً أو متجراً من القوائم أدناه.</p>
+
+  <div class="rpt-grid">
+    <div class="rpt-card"><span>المستخدمون</span><strong>{{ stats.users_total }}</strong></div>
+    <div class="rpt-card"><span>مستخدمون نشطون</span><strong>{{ stats.users_active }}</strong></div>
+    <div class="rpt-card"><span>المتاجر</span><strong>{{ stats.stores_total }}</strong></div>
+    <div class="rpt-card"><span>متاجر نشطة</span><strong>{{ stats.stores_active }}</strong></div>
+    <div class="rpt-card"><span>عضويات نشطة</span><strong>{{ stats.memberships_active }}</strong></div>
+    <div class="rpt-card"><span>سجلات موظفين</span><strong>{{ stats.employees_total }}</strong></div>
+    <div class="rpt-card"><span>ملاك بعدة فروع</span><strong>{{ stats.owners_with_multi_stores }}</strong></div>
+  </div>
+
+  <form method="get" class="rpt-filters">
+    <div>
+      <label for="id_user">المستخدم</label>
+      <select name="user" id="id_user" onchange="this.form.submit()">
+        <option value="">— اختر مستخدماً —</option>
+        {% for u in users %}
+          <option value="{{ u.id }}" {% if selected_user_id == u.id|stringformat:"s" %}selected{% endif %}>
+            {{ u.username }}{% if u.get_full_name %} — {{ u.get_full_name }}{% endif %}{% if u.email %} ({{ u.email }}){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label for="id_store">المتجر</label>
+      <select name="store" id="id_store" onchange="this.form.submit()">
+        <option value="">— اختر متجراً —</option>
+        {% for s in stores %}
+          <option value="{{ s.id }}" {% if selected_store_id == s.id|stringformat:"s" %}selected{% endif %}>
+            {{ s.name }} — مالك: {{ s.owner.username }} (أعضاء {{ s.members_count }} / موظفون {{ s.employees_count }})
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <a href="{% url 'admin:platform_reports' %}" class="button">مسح التصفية</a>
+    </div>
+  </form>
+
+  {% if user_report %}
+  <div class="rpt-section">
+    <h2>
+      تقرير المستخدم: {{ user_report.user.username }}
+      {% if user_report.user.is_staff %}<span class="rpt-badge">Staff</span>{% endif %}
+      {% if not user_report.user.is_active %}<span class="rpt-badge off">غير نشط</span>{% endif %}
+    </h2>
+    <p class="rpt-muted">
+      {{ user_report.user.email|default:"—" }}
+      · متاجر يملكها: <strong>{{ user_report.owned_count }}</strong>
+      · عضويات: <strong>{{ user_report.memberships_count }}</strong>
+      · توظيف: <strong>{{ user_report.employments_count }}</strong>
+    </p>
+
+    <h3>المتاجر التي يملكها (فروع)</h3>
+    {% if user_report.owned_stores %}
+    <table class="rpt-table">
+      <thead>
+        <tr>
+          <th>المتجر</th>
+          <th>الحالة</th>
+          <th>العملة</th>
+          <th>أعضاء نشطون</th>
+          <th>موظفون</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in user_report.owned_stores %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td>{% if s.is_active %}<span class="rpt-badge ok">نشط</span>{% else %}<span class="rpt-badge off">موقوف</span>{% endif %}</td>
+          <td>{{ s.currency }}</td>
+          <td>{{ s.members_count }}</td>
+          <td>{{ s.employees_count }}</td>
+          <td><a href="?user={{ user_report.user.id }}&store={{ s.id }}">تفاصيل المتجر</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="rpt-muted">لا يملك أي متجر.</p>
+    {% endif %}
+
+    <h3>العضويات (ارتباط بالمتاجر)</h3>
+    {% if user_report.memberships %}
+    <table class="rpt-table">
+      <thead>
+        <tr>
+          <th>المتجر</th>
+          <th>الدور</th>
+          <th>نشط؟</th>
+          <th>مالك المتجر</th>
+          <th>أعضاء المتجر</th>
+          <th>موظفو المتجر</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in user_report.memberships %}
+        <tr>
+          <td>{{ m.store.name }}</td>
+          <td>{{ m.role.name }} <span class="rpt-muted">({{ m.role.code }})</span></td>
+          <td>{% if m.is_active %}<span class="rpt-badge ok">نعم</span>{% else %}<span class="rpt-badge off">لا</span>{% endif %}</td>
+          <td>{{ m.store.owner.username }}</td>
+          <td>{{ m.store_members }}</td>
+          <td>{{ m.store_employees }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="rpt-muted">لا توجد عضويات.</p>
+    {% endif %}
+
+    <h3>سجلات الموظف (Employee)</h3>
+    {% if user_report.employments %}
+    <table class="rpt-table">
+      <thead>
+        <tr><th>المتجر</th><th>الدور</th><th>تاريخ التعيين</th></tr>
+      </thead>
+      <tbody>
+        {% for e in user_report.employments %}
+        <tr>
+          <td>{{ e.store.name }}</td>
+          <td>{{ e.membership.role.name }}</td>
+          <td>{{ e.hire_date }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="rpt-muted">لا يوجد سجل موظف مرتبط.</p>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if store_report %}
+  <div class="rpt-section">
+    <h2>تقرير المتجر: {{ store_report.store.name }}</h2>
+    <p class="rpt-muted">
+      المالك: <strong>{{ store_report.store.owner.username }}</strong>
+      {% if store_report.store.owner.get_full_name %} ({{ store_report.store.owner.get_full_name }}){% endif %}
+      · فروع نفس المالك: <strong>{{ store_report.branches_count }}</strong>
+      · أعضاء نشطون: <strong>{{ store_report.members_count }}</strong>
+      · موظفون: <strong>{{ store_report.employees_count }}</strong>
+    </p>
+
+    {% if store_report.branches_same_owner %}
+    <h3>فروع أخرى لنفس المالك</h3>
+    <ul>
+      {% for b in store_report.branches_same_owner %}
+      <li><a href="?store={{ b.id }}">{{ b.name }}</a>{% if not b.is_active %} <span class="rpt-badge off">موقوف</span>{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    <h3>الأعضاء</h3>
+    <table class="rpt-table">
+      <thead>
+        <tr><th>المستخدم</th><th>الاسم</th><th>البريد</th><th>الدور</th><th>نشط؟</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for m in store_report.members %}
+        <tr>
+          <td>{{ m.user.username }}</td>
+          <td>{{ m.user.get_full_name|default:"—" }}</td>
+          <td>{{ m.user.email|default:"—" }}</td>
+          <td>{{ m.role.name }}</td>
+          <td>{% if m.is_active %}<span class="rpt-badge ok">نعم</span>{% else %}<span class="rpt-badge off">لا</span>{% endif %}</td>
+          <td><a href="?user={{ m.user.id }}&store={{ store_report.store.id }}">تقرير المستخدم</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="rpt-muted">لا أعضاء.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <h3>الموظفون</h3>
+    <table class="rpt-table">
+      <thead>
+        <tr><th>المستخدم</th><th>الدور</th><th>تاريخ التعيين</th></tr>
+      </thead>
+      <tbody>
+        {% for e in store_report.employees %}
+        <tr>
+          <td>{{ e.user.username }}</td>
+          <td>{{ e.membership.role.name }}</td>
+          <td>{{ e.hire_date }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="rpt-muted">لا موظفين مسجّلين في جدول Employee.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  <div class="rpt-section">
+    <h2>ملخص كل المتاجر</h2>
+    <table class="rpt-table">
+      <thead>
+        <tr>
+          <th>المتجر</th>
+          <th>المالك</th>
+          <th>الحالة</th>
+          <th>أعضاء نشطون</th>
+          <th>موظفون</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in stores_summary %}
+        <tr>
+          <td>{{ s.name }}</td>
+          <td>{{ s.owner.username }}</td>
+          <td>{% if s.is_active %}<span class="rpt-badge ok">نشط</span>{% else %}<span class="rpt-badge off">موقوف</span>{% endif %}</td>
+          <td>{{ s.members_count }}</td>
+          <td>{{ s.employees_count }}</td>
+          <td><a href="?store={{ s.id }}">عرض الارتباطات</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="rpt-section">
+    <h2>مستخدمون نشطون بلا متجر <span class="rpt-badge warn">{{ users_without_store|length }}</span></h2>
+    <p class="rpt-muted">لا يملكون متجراً ولا عضوية نشطة — غالباً حسابات جديدة أو دعوات ناقصة.</p>
+    {% if users_without_store %}
+    <ul>
+      {% for u in users_without_store %}
+      <li>
+        <a href="?user={{ u.id }}">{{ u.username }}</a>
+        {% if u.email %} — {{ u.email }}{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="rpt-muted">لا يوجد.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

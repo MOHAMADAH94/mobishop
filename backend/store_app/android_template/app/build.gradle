@@ -1,0 +1,45 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace '__PACKAGE_NAME__'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "__PACKAGE_NAME__"
+        minSdk 24
+        targetSdk 34
+        versionCode __VERSION_CODE__
+        versionName "__VERSION_NAME__"
+        buildConfigField "String", "STORE_URL", "\"__STORE_URL__\""
+        buildConfigField "String", "PRIMARY_COLOR", "\"#__PRIMARY_COLOR__\""
+        resValue "string", "app_name", "__APP_NAME__"
+        resValue "color", "primary_color", "#__PRIMARY_COLOR__"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.webkit:webkit:1.10.0'
+}

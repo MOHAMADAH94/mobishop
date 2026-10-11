@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+{% load static i18n %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'admin/css/mobishop_admin.css' %}?v=1">
+{% endblock %}
+
+{% block extrahead %}
+  {{ block.super }}
+  <meta name="theme-color" content="#1e40af">
+  <link rel="icon" href="{% static 'admin/img/mobishop_mark.svg' %}" type="image/svg+xml">
+{% endblock %}
+
+{% block branding %}
+  <div id="mobishop-brand">
+    <a href="{% url 'admin:index' %}" class="mobishop-brand-link">
+      <span class="mobishop-brand-mark" aria-hidden="true">
+        <img src="{% static 'admin/img/mobishop_mark.svg' %}" width="36" height="36" alt="">
+      </span>
+      <span class="mobishop-brand-text">
+        <strong>{{ site_header|default:_('Django administration') }}</strong>
+        <small>إدارة منصة محلات الموبايلات</small>
+      </span>
+    </a>
+  </div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block footer %}
+  <div id="mobishop-footer">
+    <div class="mobishop-footer-inner">
+      <span>© {% now "Y" %} موبي شوب — لوحة إدارة المنصة</span>
+      <span class="mobishop-footer-sep">·</span>
+      <span>ألوان وواجهة متوافقة مع التطبيق</span>
+    </div>
+  </div>
+  <script src="{% static 'admin/js/mobishop_admin.js' %}?v=1" defer></script>
+  {{ block.super }}
+{% endblock %}

@@ -1,0 +1,1096 @@
+/*
+  موبي شوب — ثيم لوحة تحكم Django
+  ألوان التطبيق: أزرق العلامة #2563eb | #1e40af | #3b82f6 | خلفية #f8fafc
+*/
+
+:root {
+  --mobishop-primary: #1e40af;
+  --mobishop-primary-deep: #1e3a8a;
+  --mobishop-secondary: #2563eb;
+  --mobishop-accent: #60a5fa;
+  --mobishop-bg: #f8fafc;
+  --mobishop-surface: #FFFFFF;
+  --mobishop-text: #0f172a;
+  --mobishop-muted: #64748b;
+  --mobishop-success: #059669;
+  --mobishop-danger: #dc2626;
+  --mobishop-border: #E2E8F0;
+  --mobishop-shadow: 0 10px 28px rgba(30, 64, 175, 0.10);
+  --mobishop-shadow-sm: 0 4px 14px rgba(30, 64, 175, 0.08);
+  --mobishop-radius: 16px;
+  --mobishop-radius-sm: 12px;
+  --mobishop-font: "Cairo", "Tahoma", "Segoe UI", sans-serif;
+
+  --primary: var(--mobishop-primary);
+  --secondary: var(--mobishop-secondary);
+  --accent: var(--mobishop-secondary);
+  --primary-fg: #fff;
+  --body-fg: var(--mobishop-text);
+  --body-bg: var(--mobishop-bg);
+  --body-quiet-color: var(--mobishop-muted);
+  --body-loud-color: var(--mobishop-text);
+  --header-color: #fff;
+  --header-branding-color: #fff;
+  --header-bg: linear-gradient(115deg, #1e3a8a 0%, #1e40af 48%, #1d4ed8 100%);
+  --header-link-color: #dbeafe;
+  --breadcrumbs-fg: #bfdbfe;
+  --breadcrumbs-link-fg: #fff;
+  --breadcrumbs-bg: var(--mobishop-primary-deep);
+  --link-fg: var(--mobishop-primary);
+  --link-hover-color: var(--mobishop-secondary);
+  --link-selected-fg: #1e40af;
+  --hairline-color: var(--mobishop-border);
+  --border-color: var(--mobishop-border);
+  --darkened-bg: #eff6ff;
+  --selected-bg: #dbeafe;
+  --selected-row: #eff6ff;
+  --button-bg: var(--mobishop-primary);
+  --button-hover-bg: #1e3a8a;
+  --default-button-bg: var(--mobishop-secondary);
+  --default-button-hover-bg: #1d4ed8;
+  --close-button-bg: #6B7C8C;
+  --delete-button-bg: var(--mobishop-danger);
+  --object-tools-bg: var(--mobishop-secondary);
+  --object-tools-hover-bg: #1d4ed8;
+  --font-family-primary: var(--mobishop-font);
+  --font-family-secondary: var(--mobishop-font);
+}
+
+html[data-theme="dark"] {
+  --mobishop-bg: #0F1A24;
+  --mobishop-surface: #172533;
+  --mobishop-text: #E8EEF5;
+  --mobishop-muted: #A0B0C0;
+  --mobishop-border: #2A3B4D;
+  --body-bg: var(--mobishop-bg);
+  --body-fg: var(--mobishop-text);
+  --darkened-bg: #13202C;
+  --selected-bg: #1A3A36;
+  --selected-row: #1A3A36;
+  --hairline-color: var(--mobishop-border);
+  --border-color: var(--mobishop-border);
+}
+
+/* ——— أساسيات ——— */
+html, body {
+  font-family: var(--mobishop-font) !important;
+  background: var(--mobishop-bg) !important;
+  color: var(--mobishop-text);
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 100% -10%, rgba(37, 99, 235, 0.10), transparent 55%),
+    radial-gradient(ellipse 60% 40% at -10% 20%, rgba(30, 64, 175, 0.10), transparent 50%);
+  background-attachment: fixed;
+}
+
+a:link, a:visited { color: var(--mobishop-primary); }
+a:hover { color: var(--mobishop-secondary); }
+
+/* ——— الرأس ——— */
+#header {
+  background: linear-gradient(115deg, #1e3a8a 0%, #1e40af 48%, #1d4ed8 100%) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(30, 58, 138, 0.28);
+  padding: 14px 28px !important;
+  align-items: center;
+}
+
+#branding h1,
+#branding h1 a:link,
+#branding h1 a:visited {
+  color: #fff !important;
+  font-weight: 800;
+}
+
+#mobishop-brand { display: flex; align-items: center; }
+.mobishop-brand-link {
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none !important;
+  color: #fff !important;
+}
+.mobishop-brand-mark {
+  display: inline-flex;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.18));
+}
+.mobishop-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.mobishop-brand-text strong {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.mobishop-brand-text small {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.88;
+  color: #bfdbfe;
+}
+
+#user-tools {
+  color: #dbeafe !important;
+  font-weight: 600;
+  padding: 0 !important;
+}
+#user-tools a {
+  color: #fff !important;
+  border-bottom: 1px solid transparent;
+}
+#user-tools a:hover {
+  border-bottom-color: var(--mobishop-accent);
+}
+
+/* ——— مسار التنقل ——— */
+div.breadcrumbs {
+  background: linear-gradient(90deg, #172554, #1e40af) !important;
+  color: #bfdbfe !important;
+  padding: 12px 28px !important;
+  border: none !important;
+  font-weight: 600;
+}
+div.breadcrumbs a { color: #fff !important; }
+
+/* ——— التخطيط ——— */
+#container { height: auto; min-height: 100vh; }
+#main { padding-bottom: 48px; }
+
+#content {
+  padding: 24px 28px 40px !important;
+}
+
+#content h1 {
+  font-weight: 800;
+  color: var(--mobishop-primary);
+  font-size: 1.65rem;
+  margin-bottom: 18px;
+}
+
+/* ——— الشريط الجانبي ——— */
+#nav-sidebar {
+  background: var(--mobishop-surface) !important;
+  border-inline-end: 1px solid var(--mobishop-border) !important;
+  box-shadow: var(--mobishop-shadow-sm);
+}
+#nav-sidebar .current-model { background: #dbeafe !important; }
+#nav-filter {
+  border-radius: 10px !important;
+  border: 1px solid var(--mobishop-border) !important;
+  padding: 8px 12px !important;
+}
+.toggle-nav-sidebar {
+  border-color: var(--mobishop-border) !important;
+  background: var(--mobishop-surface) !important;
+  color: var(--mobishop-primary) !important;
+}
+
+/* ——— الوحدات والجداول ——— */
+.module,
+.mobishop-app-module {
+  background: var(--mobishop-surface) !important;
+  border: 1px solid var(--mobishop-border) !important;
+  border-radius: var(--mobishop-radius) !important;
+  box-shadow: var(--mobishop-shadow-sm);
+  overflow: hidden;
+  margin-bottom: 18px !important;
+}
+
+/* داخل صفحات التعديل: لا تقطع القوائم المنسدلة */
+.change-form .module,
+.change-form fieldset.module,
+.change-form .inline-group,
+#content-main > form .module {
+  overflow: visible !important;
+}
+
+.module caption,
+.inline-group h2,
+.module > h2,
+fieldset.module h2 {
+  background: linear-gradient(90deg, #1e40af, #2563eb) !important;
+  color: #fff !important;
+  padding: 12px 16px !important;
+  font-weight: 700 !important;
+  font-size: 0.98rem !important;
+  border: none !important;
+  caption-side: top;
+}
+
+.module caption a,
+.module h2 a {
+  color: #fff !important;
+}
+
+#changelist {
+  background: transparent !important;
+}
+
+#changelist .actions {
+  background: var(--mobishop-surface);
+  border: 1px solid var(--mobishop-border);
+  border-radius: var(--mobishop-radius-sm);
+  padding: 10px 12px;
+}
+
+#changelist-filter {
+  background: var(--mobishop-surface) !important;
+  border: 1px solid var(--mobishop-border) !important;
+  border-radius: var(--mobishop-radius) !important;
+  box-shadow: var(--mobishop-shadow-sm);
+  overflow: hidden;
+}
+#changelist-filter h2 {
+  background: var(--mobishop-primary) !important;
+  color: #fff !important;
+  padding: 12px 14px !important;
+}
+#changelist-filter h3 {
+  color: var(--mobishop-primary);
+  font-weight: 700;
+}
+#changelist-filter li.selected a {
+  color: var(--mobishop-secondary) !important;
+  font-weight: 700;
+}
+
+#result_list {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: var(--mobishop-surface);
+  border-radius: var(--mobishop-radius);
+  overflow: hidden;
+  border: 1px solid var(--mobishop-border);
+}
+#result_list thead th {
+  background: #eff6ff !important;
+  color: var(--mobishop-primary);
+  font-weight: 700;
+  border-bottom: 1px solid var(--mobishop-border) !important;
+  padding: 12px 10px !important;
+}
+#result_list tbody tr:nth-child(even) { background: #f8fafc; }
+#result_list tbody tr:hover { background: #eff6ff !important; }
+#result_list td, #result_list th {
+  border-bottom: 1px solid var(--mobishop-border);
+  padding: 11px 10px !important;
+  vertical-align: middle;
+}
+
+/* ——— النماذج ——— */
+.form-row {
+  border-bottom: 1px solid var(--mobishop-border) !important;
+  padding: 14px 0 !important;
+  overflow: visible !important;
+}
+.form-row::after {
+  clear: both;
+  content: "";
+  display: table;
+}
+label {
+  font-weight: 700 !important;
+  color: var(--mobishop-text) !important;
+}
+input[type=text],
+input[type=password],
+input[type=email],
+input[type=url],
+input[type=number],
+input[type=tel],
+input[type=date],
+input[type=time],
+input[type=datetime-local],
+textarea,
+.vTextField,
+.vLargeTextField,
+.vURLField,
+.vIntegerField,
+.vDateField,
+.vTimeField {
+  border: 1.5px solid var(--mobishop-border) !important;
+  border-radius: 12px !important;
+  padding: 10px 12px !important;
+  min-height: 44px;
+  background: #fff !important;
+  color: var(--mobishop-text) !important;
+  font-family: var(--mobishop-font) !important;
+  font-size: 0.98rem !important;
+  font-weight: 600 !important;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  box-sizing: border-box;
+}
+textarea {
+  min-height: 120px;
+  line-height: 1.65 !important;
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--mobishop-secondary) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18) !important;
+  outline: none !important;
+}
+
+/* ——— القوائم المنسدلة (شامل) ——— */
+select,
+select.admin-autocomplete,
+.form-row select,
+.aligned select,
+.actions select,
+fieldset select,
+.inline-group select,
+.related-widget-wrapper > select {
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+  display: inline-block !important;
+  width: auto !important;
+  min-width: min(100%, 280px) !important;
+  max-width: 100% !important;
+  min-height: 46px !important;
+  height: auto !important;
+  line-height: 1.4 !important;
+  padding: 10px 42px 10px 14px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background-color: #FFFFFF !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231e40af' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: left 14px center !important;
+  background-size: 16px 16px !important;
+  color: #0f172a !important;
+  font-family: var(--mobishop-font) !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  vertical-align: middle;
+  box-sizing: border-box !important;
+}
+[dir="rtl"] select,
+[dir="rtl"] .form-row select,
+[dir="rtl"] .aligned select,
+[dir="rtl"] .actions select,
+[dir="rtl"] fieldset select,
+[dir="rtl"] .related-widget-wrapper > select {
+  padding: 10px 14px 10px 42px !important;
+  background-position: left 14px center !important;
+}
+select:hover {
+  border-color: var(--mobishop-secondary) !important;
+  background-color: #eff6ff !important;
+}
+select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed !important;
+  background-color: #EEF2F6 !important;
+}
+select option,
+select optgroup {
+  color: #0f172a !important;
+  background: #fff !important;
+  font-weight: 600;
+  padding: 8px;
+}
+
+/* Related widget (ForeignKey + أزرار إضافة/تعديل) */
+.related-widget-wrapper {
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 720px;
+  overflow: visible !important;
+}
+.related-widget-wrapper select {
+  flex: 1 1 240px !important;
+}
+.related-widget-wrapper-link {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 10px !important;
+  background: #eff6ff !important;
+  border: 1px solid var(--mobishop-border) !important;
+}
+.related-widget-wrapper-link:hover {
+  background: #dbeafe !important;
+  border-color: var(--mobishop-secondary) !important;
+}
+
+/* Select2 / Autocomplete */
+.select2-container {
+  width: min(100%, 420px) !important;
+  min-width: 240px !important;
+  z-index: 20;
+}
+.select2-container--admin-autocomplete .select2-selection--single,
+.select2-container--default .select2-selection--single {
+  min-height: 46px !important;
+  height: 46px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  padding: 6px 10px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+.select2-container--admin-autocomplete .select2-selection--single .select2-selection__rendered,
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  color: #0f172a !important;
+  font-family: var(--mobishop-font) !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  line-height: 32px !important;
+  padding: 0 8px !important;
+}
+.select2-container--admin-autocomplete .select2-selection--single .select2-selection__arrow,
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+  height: 44px !important;
+  width: 32px !important;
+  top: 1px !important;
+}
+.select2-dropdown,
+.select2-container--open .select2-dropdown {
+  z-index: 10050 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  box-shadow: var(--mobishop-shadow);
+  font-family: var(--mobishop-font) !important;
+}
+.select2-results__option {
+  padding: 10px 12px !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+}
+.select2-results__option--highlighted[aria-selected],
+.select2-results__option--highlighted {
+  background: #2563eb !important;
+  color: #fff !important;
+}
+.select2-search--dropdown .select2-search__field {
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 8px 10px !important;
+  font-family: var(--mobishop-font) !important;
+}
+
+/* حقل الحالة داخل النموذج يظهر أوضح */
+.form-row .field-status select,
+.form-row select#id_status {
+  min-width: min(100%, 320px) !important;
+  border-color: var(--mobishop-secondary) !important;
+  background-color: #eff6ff !important;
+}
+
+/* ——— الأزرار ——— */
+.button,
+input[type=submit],
+input[type=button],
+.submit-row input,
+a.button {
+  border-radius: 12px !important;
+  font-family: var(--mobishop-font) !important;
+  font-weight: 700 !important;
+  padding: 10px 18px !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: transform .12s ease, background .15s ease, box-shadow .15s ease;
+}
+.button:hover,
+input[type=submit]:hover,
+input[type=button]:hover,
+a.button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--mobishop-shadow-sm);
+}
+.button.default,
+input[type=submit].default,
+.submit-row input.default {
+  background: var(--mobishop-secondary) !important;
+}
+input[type=submit],
+.button {
+  background: var(--mobishop-primary) !important;
+  color: #fff !important;
+}
+.deletelink,
+.deletelink-box a.deletelink,
+.delete-confirmation form input[type=submit] {
+  background: var(--mobishop-danger) !important;
+}
+
+.object-tools {
+  margin-bottom: 16px;
+}
+.object-tools a {
+  background: var(--mobishop-secondary) !important;
+  border-radius: 999px !important;
+  padding: 8px 16px !important;
+  font-weight: 700 !important;
+  box-shadow: var(--mobishop-shadow-sm);
+}
+.object-tools a:hover {
+  background: #1d4ed8 !important;
+}
+
+.submit-row {
+  background: var(--mobishop-surface) !important;
+  border: 1px solid var(--mobishop-border) !important;
+  border-radius: var(--mobishop-radius) !important;
+  padding: 16px !important;
+  box-shadow: var(--mobishop-shadow-sm);
+}
+
+/* ——— رسائل ——— */
+.messagelist li {
+  border-radius: var(--mobishop-radius-sm) !important;
+  font-weight: 600;
+  border: none !important;
+  box-shadow: var(--mobishop-shadow-sm);
+}
+.messagelist .success { background: #d1fae5 !important; color: var(--mobishop-success) !important; }
+.messagelist .warning { background: #dbeafe !important; color: #1e40af !important; }
+.messagelist .error { background: #FDEDEC !important; color: var(--mobishop-danger) !important; }
+.errornote {
+  background: #FDEDEC !important;
+  color: var(--mobishop-danger) !important;
+  border: none !important;
+  border-radius: var(--mobishop-radius-sm) !important;
+  padding: 12px 14px !important;
+  font-weight: 700;
+}
+
+/* ——— صفحة رئيسية مخصصة ——— */
+.mobishop-dashboard #content > h1 { display: none; }
+
+.mobishop-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-end;
+  background:
+    linear-gradient(125deg, rgba(30, 64, 175, 0.96), rgba(37, 99, 235, 0.92)),
+    radial-gradient(circle at 90% 10%, rgba(96, 165, 250, 0.35), transparent 40%);
+  color: #fff;
+  border-radius: 22px;
+  padding: 28px 30px;
+  margin-bottom: 22px;
+  box-shadow: var(--mobishop-shadow);
+  position: relative;
+  overflow: hidden;
+}
+.mobishop-hero::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: -40px;
+  top: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
+}
+.mobishop-eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #60a5fa;
+}
+.mobishop-hero h1 {
+  margin: 0 0 8px !important;
+  color: #fff !important;
+  font-size: 1.75rem !important;
+  font-weight: 800 !important;
+}
+.mobishop-hero-lead {
+  margin: 0;
+  max-width: 46ch;
+  color: rgba(255,255,255,0.9);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+.mobishop-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  z-index: 1;
+}
+
+.mobishop-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none !important;
+  transition: transform .12s ease, background .15s ease;
+}
+.mobishop-btn:hover { transform: translateY(-1px); }
+.mobishop-btn-primary {
+  background: #60a5fa !important;
+  color: #0f172a !important;
+}
+.mobishop-btn-primary:hover { background: #93c5fd !important; color: #0f172a !important; }
+.mobishop-btn-ghost {
+  background: rgba(255,255,255,0.14) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255,255,255,0.35);
+}
+.mobishop-btn-ghost:hover { background: rgba(255,255,255,0.22) !important; color: #fff !important; }
+
+.mobishop-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+.mobishop-stat-card {
+  background: var(--mobishop-surface);
+  border: 1px solid var(--mobishop-border);
+  border-radius: var(--mobishop-radius);
+  padding: 18px 16px;
+  box-shadow: var(--mobishop-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.mobishop-stat-card::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--mobishop-primary), var(--mobishop-secondary));
+}
+.mobishop-stat-accent::before {
+  background: linear-gradient(180deg, var(--mobishop-accent), var(--mobishop-secondary));
+}
+.mobishop-stat-label {
+  color: var(--mobishop-muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.mobishop-stat-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--mobishop-primary);
+  line-height: 1.1;
+}
+.mobishop-stat-meta {
+  color: var(--mobishop-secondary);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.mobishop-stat-card a {
+  margin-top: 6px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--mobishop-secondary) !important;
+  text-decoration: none;
+}
+.mobishop-stat-card a:hover { text-decoration: underline; }
+
+.mobishop-quick {
+  margin-bottom: 28px;
+}
+.mobishop-quick h2 {
+  margin: 0 0 12px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--mobishop-primary);
+}
+.mobishop-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mobishop-quick-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--mobishop-surface);
+  border: 1px solid var(--mobishop-border);
+  border-radius: var(--mobishop-radius);
+  padding: 16px;
+  text-decoration: none !important;
+  color: inherit !important;
+  box-shadow: var(--mobishop-shadow-sm);
+  transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+.mobishop-quick-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(37, 99, 235, 0.45);
+  box-shadow: var(--mobishop-shadow);
+}
+.mobishop-quick-icon {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e40af, #2563eb);
+  color: #fff;
+  font-weight: 800;
+}
+.mobishop-quick-card strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--mobishop-primary);
+  font-size: 1.02rem;
+}
+.mobishop-quick-card p {
+  margin: 0;
+  color: var(--mobishop-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.mobishop-app-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+.mobishop-app-list .mobishop-app-module { margin-bottom: 0 !important; }
+.mobishop-app-module table { width: 100%; }
+.mobishop-app-module th,
+.mobishop-app-module td {
+  padding: 12px 14px !important;
+  border-bottom: 1px solid var(--mobishop-border);
+}
+.mobishop-app-module tr:last-child th,
+.mobishop-app-module tr:last-child td { border-bottom: none; }
+.mobishop-app-module .addlink,
+.mobishop-app-module .changelink,
+.mobishop-app-module .viewlink {
+  font-weight: 700;
+}
+
+/* ——— تسجيل الدخول ——— */
+body.mobishop-login {
+  background: var(--mobishop-bg) !important;
+}
+body.mobishop-login #header,
+body.mobishop-login #nav-sidebar,
+body.mobishop-login .toggle-nav-sidebar,
+body.mobishop-login #mobishop-footer {
+  display: none !important;
+}
+body.mobishop-login #container {
+  min-height: 100vh;
+}
+body.mobishop-login #main {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0 !important;
+}
+body.mobishop-login #content {
+  width: 100%;
+  max-width: none;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+body.mobishop-login .errornote {
+  max-width: 980px;
+  margin: 20px auto 0;
+}
+
+.mobishop-login-shell {
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 100vh;
+  width: 100%;
+}
+.mobishop-login-aside {
+  background:
+    linear-gradient(145deg, rgba(30, 58, 138, 0.96), rgba(29, 78, 216, 0.92)),
+    radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.28), transparent 45%);
+  color: #fff;
+  padding: 48px;
+  display: flex;
+  align-items: center;
+}
+.mobishop-login-aside-inner { max-width: 420px; }
+.mobishop-login-badge {
+  display: inline-flex;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.25);
+  font-weight: 800;
+  margin-bottom: 18px;
+  color: #bfdbfe;
+}
+.mobishop-login-aside h1 {
+  margin: 0 0 14px !important;
+  color: #fff !important;
+  font-size: 2.4rem !important;
+  line-height: 1.25 !important;
+  font-weight: 800 !important;
+}
+.mobishop-login-aside p {
+  margin: 0 0 22px;
+  color: rgba(255,255,255,0.9);
+  line-height: 1.75;
+  font-size: 1.05rem;
+}
+.mobishop-login-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+.mobishop-login-points li {
+  position: relative;
+  padding-inline-start: 22px;
+  font-weight: 600;
+}
+.mobishop-login-points li::before {
+  content: "";
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0.55em;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mobishop-accent);
+}
+
+.mobishop-login-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 28px;
+  background:
+    radial-gradient(ellipse at 80% 0%, rgba(37, 99, 235, 0.08), transparent 40%),
+    var(--mobishop-bg);
+}
+.mobishop-login-panel #login-form,
+body.login #login-form {
+  width: min(100%, 420px);
+  background: var(--mobishop-surface);
+  border: 1px solid var(--mobishop-border);
+  border-radius: 22px;
+  padding: 32px 28px;
+  box-shadow: var(--mobishop-shadow);
+}
+.mobishop-login-header {
+  margin-bottom: 22px;
+}
+.mobishop-login-header h2 {
+  margin: 0 0 6px;
+  color: var(--mobishop-primary);
+  font-size: 1.55rem;
+  font-weight: 800;
+}
+.mobishop-login-header p {
+  margin: 0;
+  color: var(--mobishop-muted);
+  font-size: 0.95rem;
+}
+body.login .form-row {
+  float: none !important;
+  padding: 0 0 16px !important;
+  border: none !important;
+}
+body.login .form-row label {
+  display: block;
+  margin-bottom: 6px;
+}
+body.login .form-row input {
+  width: 100% !important;
+  box-sizing: border-box;
+}
+body.login .submit-row {
+  padding: 8px 0 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  text-align: stretch;
+}
+body.login .submit-row input {
+  width: 100%;
+  min-height: 48px;
+  background: linear-gradient(90deg, #1e40af, #2563eb) !important;
+  font-size: 1.05rem !important;
+}
+
+/* ——— تذييل ——— */
+#mobishop-footer {
+  margin-top: auto;
+  padding: 18px 28px 28px;
+}
+.mobishop-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  color: var(--mobishop-muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+.mobishop-footer-sep { opacity: 0.5; }
+
+/* ——— تفاصيل صغيرة ——— */
+.selector .selector-chosen h2 {
+  background: var(--mobishop-secondary) !important;
+}
+.calendarbox, .clockbox {
+  border-radius: 12px !important;
+  border-color: var(--mobishop-border) !important;
+  overflow: hidden;
+}
+.paginator a:link, .paginator a:visited {
+  background: var(--mobishop-surface);
+  border: 1px solid var(--mobishop-border);
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+.paginator .this-page {
+  background: var(--mobishop-primary) !important;
+  color: #fff !important;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+/* ——— شارات الحالة في القوائم ——— */
+.mobishop-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+#result_list td .mobishop-badge {
+  box-shadow: 0 1px 0 rgba(30, 64, 175, 0.06);
+}
+
+#result_list select {
+  min-width: 120px;
+  font-weight: 700 !important;
+  color: var(--mobishop-primary) !important;
+  background: #eff6ff !important;
+  border: 1.5px solid var(--mobishop-secondary) !important;
+}
+
+/* ——— تجاوب ——— */
+@media (max-width: 1100px) {
+  .mobishop-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px) {
+  .mobishop-login-shell { grid-template-columns: 1fr; }
+  .mobishop-login-aside { min-height: 280px; padding: 32px 24px; }
+  .mobishop-quick-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+  .mobishop-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #content { padding: 16px !important; }
+  .mobishop-hero { padding: 22px; }
+  .mobishop-brand-text small { display: none; }
+}
+@media (max-width: 480px) {
+  .mobishop-stats { grid-template-columns: 1fr; }
+}
+
+/* ——— لوحات التقارير في الرئيسية ——— */
+.mobishop-reports-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.mobishop-panel {
+  background: var(--mobishop-surface);
+  border: 1px solid var(--mobishop-border);
+  border-radius: var(--mobishop-radius);
+  box-shadow: var(--mobishop-shadow-sm);
+  overflow: hidden;
+}
+.mobishop-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(90deg, #1e40af, #2563eb);
+  color: #fff;
+}
+.mobishop-panel-head h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff !important;
+}
+.mobishop-panel-head a {
+  color: #dbeafe !important;
+  font-weight: 700;
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+.mobishop-panel-head a:hover { color: #fff !important; text-decoration: underline; }
+.mobishop-mini-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.mobishop-mini-table th,
+.mobishop-mini-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--mobishop-border);
+  text-align: right;
+  font-size: 0.92rem;
+}
+.mobishop-mini-table th {
+  background: #eff6ff;
+  color: var(--mobishop-primary);
+  font-weight: 800;
+}
+.mobishop-mini-table tr:last-child td { border-bottom: none; }
+.mobishop-mini-table tbody tr:hover { background: #eff6ff; }
+.mobishop-empty {
+  margin: 0;
+  padding: 22px 16px;
+  color: var(--mobishop-muted);
+  font-weight: 600;
+}
+.mobishop-muted { color: var(--mobishop-muted); font-size: 0.82rem; }
+.mobishop-section-title {
+  grid-column: 1 / -1;
+  margin: 8px 0 4px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--mobishop-primary);
+}
+.mobishop-brand-mark img {
+  display: block;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.18);
+}
+@media (max-width: 900px) {
+  .mobishop-reports-grid { grid-template-columns: 1fr; }
+}

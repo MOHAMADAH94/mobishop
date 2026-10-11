@@ -1,0 +1,8 @@
+{
+  "name": "mobishop",
+  "private": true,
+  "scripts": {
+    "backend": "powershell -ExecutionPolicy Bypass -File ./start-backend.ps1",
+    "frontend": "cd frontend && npm run dev"
+  }
+}

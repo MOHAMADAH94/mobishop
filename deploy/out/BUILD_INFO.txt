@@ -1,0 +1,32 @@
+﻿Mobishop build 2026-10-10_01-45
+Frontend bundle: index-DUZmsSvT.js
+
+=== This build ===
+Barcode print: button on product form + products list + header (not only multi-select)
+POS fix: stock qty Number coercion; mobile cart layout
+Split payments / fractional qty / Cairo font (prior)
+Migrations: products.0010, sales.0010, purchases.0005
+
+=== Modules ===
+Core: POS, products, inventory, customers, suppliers, purchases, repairs, expenses, multi-currency, roles, cashbox
+Smart Business: decision center, profit intelligence, AI assistant
+Store Catalog: /shop/{slug}, categories, product publish, owner settings
+Marketplace: /marketplace, stores directory, global products, offers, /product/{slug}
+Analytics: store/product views for store owners
+
+=== After extract (backend) ===
+KEEP existing .env â€” do not overwrite
+pip install -r requirements-hosting.txt
+python manage.py migrate --noinput
+python manage.py collectstatic --noinput
+python manage.py fix_roles
+python manage.py generate_recommendations
+touch tmp/restart.txt
+Restart Python App in cPanel
+
+=== Super Admin ===
+Open /admin/ for reports dashboard
+Enable Store.catalog_enabled per store; set StoreCatalogProfile.featured for marketplace
+Enable Store.store_app_enabled for Android app feature
+
+See deploy/FEATURES-AND-UPDATES.md for full changelog.

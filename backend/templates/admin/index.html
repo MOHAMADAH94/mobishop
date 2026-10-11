@@ -1,0 +1,218 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static mobishop_admin_tags %}
+
+{% block bodyclass %}{{ block.super }} mobishop-dashboard{% endblock %}
+
+{% block content %}
+{% mobishop_dashboard_stats as stats %}
+
+<section class="mobishop-hero" aria-label="ترحيب">
+  <div class="mobishop-hero-copy">
+    <p class="mobishop-eyebrow">لوحة التقارير</p>
+    <h1>{% firstof user.get_full_name user.get_username %}، أهلاً بك في موبي شوب</h1>
+    <p class="mobishop-hero-lead">
+      نظرة شاملة على المنصة: المتاجر، المبيعات، المخزون، المعرض، والاشتراكات — من مكان واحد.
+    </p>
+  </div>
+  <div class="mobishop-hero-actions">
+    <a class="mobishop-btn mobishop-btn-primary" href="{% url 'admin:platform_reports' %}">تقارير الارتباطات</a>
+    <a class="mobishop-btn mobishop-btn-ghost" href="/admin/stores/store/">المتاجر</a>
+    <a class="mobishop-btn mobishop-btn-ghost" href="/admin/sales/sale/">المبيعات</a>
+  </div>
+</section>
+
+<section class="mobishop-stats" aria-label="إحصائيات المنصة">
+  <article class="mobishop-stat-card mobishop-stat-accent">
+    <span class="mobishop-stat-label">مبيعات اليوم</span>
+    <strong class="mobishop-stat-value">{{ stats.sales_today_total }}</strong>
+    <span class="mobishop-stat-meta">{{ stats.sales_today_count }} فاتورة</span>
+    <a href="/admin/sales/sale/">عرض المبيعات</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">مبيعات الشهر</span>
+    <strong class="mobishop-stat-value">{{ stats.sales_month_total }}</strong>
+    <span class="mobishop-stat-meta">{{ stats.sales_month_count }} فاتورة · {{ stats.sales_week_count }} آخر 7 أيام</span>
+    <a href="/admin/sales/sale/">إدارة الفواتير</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">المتاجر</span>
+    <strong class="mobishop-stat-value">{{ stats.stores }}</strong>
+    <span class="mobishop-stat-meta">{{ stats.stores_active }} نشط · {{ stats.stores_catalog }} معرض</span>
+    <a href="/admin/stores/store/">إدارة المتاجر</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">المنتجات</span>
+    <strong class="mobishop-stat-value">{{ stats.products }}</strong>
+    <span class="mobishop-stat-meta">{{ stats.products_catalog }} منشور · {{ stats.products_low }} مخزون منخفض</span>
+    <a href="/admin/products/product/">إدارة المنتجات</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">المستخدمون</span>
+    <strong class="mobishop-stat-value">{{ stats.users }}</strong>
+    <span class="mobishop-stat-meta">{{ stats.users_active }} نشط · {{ stats.users_staff }} مشرف</span>
+    <a href="/admin/users/user/">إدارة المستخدمين</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">العملاء</span>
+    <strong class="mobishop-stat-value">{{ stats.customers }}</strong>
+    <a href="/admin/customers/customer/">إدارة العملاء</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">صيانة مفتوحة</span>
+    <strong class="mobishop-stat-value">{{ stats.repairs_open }}</strong>
+    <a href="/admin/repairs/repairorder/">أوامر الصيانة</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">الاشتراكات</span>
+    <strong class="mobishop-stat-value">{{ stats.subscriptions_active }}</strong>
+    <span class="mobishop-stat-meta">تجريبي {{ stats.subscriptions_trial }} · منتهي {{ stats.subscriptions_expired }}</span>
+    <a href="/admin/stores/subscription/">الاشتراكات</a>
+  </article>
+  <article class="mobishop-stat-card">
+    <span class="mobishop-stat-label">تطبيقات المتاجر</span>
+    <strong class="mobishop-stat-value">{{ stats.apk_completed }}</strong>
+    <span class="mobishop-stat-meta">{{ stats.apk_builds }} بناء · {{ stats.stores_app }} متجر مفعّل</span>
+    <a href="/admin/store_app/storeappbuild/">بنايات APK</a>
+  </article>
+</section>
+
+<section class="mobishop-quick" aria-label="اختصارات">
+  <h2>مسارات سريعة</h2>
+  <div class="mobishop-quick-grid">
+    <a class="mobishop-quick-card" href="{% url 'admin:platform_reports' %}">
+      <span class="mobishop-quick-icon" aria-hidden="true">١</span>
+      <div>
+        <strong>تقارير الارتباطات</strong>
+        <p>عرض علاقة المستخدمين بالمتاجر والفروع والموظفين من قوائم منسدلة</p>
+      </div>
+    </a>
+    <a class="mobishop-quick-card" href="/admin/stores/store/">
+      <span class="mobishop-quick-icon" aria-hidden="true">٢</span>
+      <div>
+        <strong>المتاجر والاشتراكات</strong>
+        <p>فعّل المعرض أو تطبيق المتجر، وراقب حالة الاشتراك</p>
+      </div>
+    </a>
+    <a class="mobishop-quick-card" href="/admin/products/product/">
+      <span class="mobishop-quick-icon" aria-hidden="true">٣</span>
+      <div>
+        <strong>المنتجات والمخزون</strong>
+        <p>راقب المنشور في المعرض والتنبيهات للمخزون المنخفض</p>
+      </div>
+    </a>
+    <a class="mobishop-quick-card" href="/admin/catalog/storecatalogprofile/">
+      <span class="mobishop-quick-icon" aria-hidden="true">٤</span>
+      <div>
+        <strong>المعرض والسوق</strong>
+        <p>ملفات المعرض، المتاجر المميزة، وظهور المنتجات في Marketplace</p>
+      </div>
+    </a>
+  </div>
+</section>
+
+<div class="mobishop-reports-grid" aria-label="تقارير تفصيلية">
+  <section class="mobishop-panel">
+    <div class="mobishop-panel-head">
+      <h2>أحدث الفواتير</h2>
+      <a href="/admin/sales/sale/">الكل</a>
+    </div>
+    {% if stats.recent_sales %}
+      <table class="mobishop-mini-table">
+        <thead>
+          <tr>
+            <th>الفاتورة</th>
+            <th>المتجر</th>
+            <th>العميل</th>
+            <th>المبلغ</th>
+            <th>الوقت</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in stats.recent_sales %}
+            <tr>
+              <td><a href="/admin/sales/sale/{{ s.id }}/change/">{{ s.invoice }}</a></td>
+              <td>{{ s.store }}</td>
+              <td>{{ s.customer }}</td>
+              <td><strong>{{ s.total }}</strong> <span class="mobishop-muted">{{ s.currency }}</span></td>
+              <td>{{ s.when }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="mobishop-empty">لا توجد فواتير بعد.</p>
+    {% endif %}
+  </section>
+
+  <section class="mobishop-panel">
+    <div class="mobishop-panel-head">
+      <h2>أقوى المتاجر هذا الشهر</h2>
+      <a href="/admin/stores/store/">المتاجر</a>
+    </div>
+    {% if stats.top_stores %}
+      <table class="mobishop-mini-table">
+        <thead>
+          <tr>
+            <th>المتجر</th>
+            <th>الفواتير</th>
+            <th>الإيراد</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in stats.top_stores %}
+            <tr>
+              <td><strong>{{ row.name }}</strong></td>
+              <td>{{ row.invoices }}</td>
+              <td><strong>{{ row.revenue }}</strong></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="mobishop-empty">لا توجد مبيعات هذا الشهر بعد.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div id="content-main" class="mobishop-app-list">
+  <h2 class="mobishop-section-title">وحدات الإدارة</h2>
+  {% if app_list %}
+    {% for app in app_list %}
+      <div class="mobishop-app-module app-{{ app.app_label }} module">
+        <table>
+          <caption>
+            <a href="{{ app.app_url }}" class="section" title="{% blocktranslate with name=app.name %}Models in the {{ name }} application{% endblocktranslate %}">{{ app.name }}</a>
+          </caption>
+          {% for model in app.models %}
+            <tr class="model-{{ model.object_name|lower }}">
+              {% if model.admin_url %}
+                <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+              {% else %}
+                <th scope="row">{{ model.name }}</th>
+              {% endif %}
+
+              {% if model.add_url %}
+                <td><a href="{{ model.add_url }}" class="addlink">{% translate 'Add' %}</a></td>
+              {% else %}
+                <td></td>
+              {% endif %}
+
+              {% if model.admin_url and show_changelinks %}
+                {% if model.view_only %}
+                  <td><a href="{{ model.admin_url }}" class="viewlink">{% translate 'View' %}</a></td>
+                {% else %}
+                  <td><a href="{{ model.admin_url }}" class="changelink">{% translate 'Change' %}</a></td>
+                {% endif %}
+              {% elif show_changelinks %}
+                <td></td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>{% translate "You don't have permission to view or edit anything." %}</p>
+  {% endif %}
+</div>
+{% endblock %}

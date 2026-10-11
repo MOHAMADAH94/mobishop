@@ -1,0 +1,23 @@
+﻿
+================================================================================
+LINE 644
+================================================================================
+
+Shell: cd "c:\Users\ROG\Desktop\Project\mobile_management\mobishop\backend"; python manage.py startapp store_app; New-Item -ItemType Directory -Force -Path store_app\management\commands, store_app\android_template | Out-Null; Write-Host "ok"
+
+StrReplace: c:\Users\ROG\Desktop\Project\mobile_management\mobishop\backend\stores\models.py
+python : Traceback (most recent call last):
+At C:\Users\ROG\AppData\Local\Temp\ps-script-fb65918b-db82-47e6-aa74-87f100641d28.ps1:95 char:1
++ python "c:\Users\ROG\Desktop\Project\mobile_management\mobishop\_extr ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "c:\Users\ROG\Desktop\Project\mobile_management\mobishop\_extract_lines.py", line 23, in <module>
+    print('OLD:', (inp.get('old_string') or '')[:400])
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ROG\AppData\Local\Programs\Python\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 87-91: character maps to <undefined>
+OLD: 
