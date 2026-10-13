@@ -143,7 +143,8 @@ class ProductWriteSerializer(serializers.ModelSerializer):
     def validate_sell_price(self, value):
         if value < 0:
             raise serializers.ValidationError('سعر البيع لا يمكن أن يكون سالباً.')
-        return value
+        from stores.currency_service import quantize_price
+        return quantize_price(value)
 
     def validate_quantity(self, value):
         if value < 0:
@@ -153,8 +154,8 @@ class ProductWriteSerializer(serializers.ModelSerializer):
     def validate_quantity_precision(self, value):
         if value is None:
             return 0
-        if value < 0 or value > 3:
-            raise serializers.ValidationError('دقة الكمية يجب أن تكون بين 0 و 3.')
+        if value < 0 or value > 4:
+            raise serializers.ValidationError('دقة الكمية يجب أن تكون بين 0 و 4.')
         return value
 
     def validate_barcode(self, value):
@@ -274,7 +275,7 @@ class ProductBulkActionSerializer(serializers.Serializer):
 
 
 class InventoryAdjustSerializer(serializers.Serializer):
-    quantity_change = serializers.DecimalField(max_digits=14, decimal_places=3)
+    quantity_change = serializers.DecimalField(max_digits=14, decimal_places=4)
     action = serializers.ChoiceField(choices=InventoryLog.Action.choices, default=InventoryLog.Action.ADJUST)
     notes = serializers.CharField(required=False, allow_blank=True)
     client_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=64)

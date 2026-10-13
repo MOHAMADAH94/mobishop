@@ -9,7 +9,7 @@ from sales.services import create_sale, process_partial_return, record_sale_paym
 
 class SaleItemSerializer(serializers.ModelSerializer):
     quantity_available_to_return = serializers.DecimalField(
-        max_digits=14, decimal_places=3, read_only=True,
+        max_digits=14, decimal_places=4, read_only=True,
     )
 
     class Meta:
@@ -45,7 +45,7 @@ class SalePaymentSerializer(serializers.ModelSerializer):
 class SaleListSerializer(serializers.ModelSerializer):
     customer_name = serializers.CharField(source='customer.name', read_only=True, default='')
     created_by_name = serializers.SerializerMethodField()
-    net_total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    net_total = serializers.DecimalField(max_digits=14, decimal_places=4, read_only=True)
     amount_due = serializers.SerializerMethodField()
 
     class Meta:
@@ -80,7 +80,7 @@ class SaleDetailSerializer(SaleListSerializer):
 
 
 class RecordPaymentSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    amount = serializers.DecimalField(max_digits=14, decimal_places=4)
     method = serializers.ChoiceField(choices=SalePayment.Method.choices, default='cash')
     notes = serializers.CharField(required=False, allow_blank=True)
 
@@ -98,7 +98,7 @@ class RecordPaymentSerializer(serializers.Serializer):
 
 class PartialReturnItemSerializer(serializers.Serializer):
     sale_item_id = serializers.IntegerField()
-    quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal('0.001'))
+    quantity = serializers.DecimalField(max_digits=14, decimal_places=4, min_value=Decimal('0.0001'))
 
 
 class PartialReturnSerializer(serializers.Serializer):
@@ -123,14 +123,14 @@ class PartialReturnSerializer(serializers.Serializer):
 
 class SaleItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
-    quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal('0.001'))
-    unit_price = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
-    discount = serializers.DecimalField(max_digits=12, decimal_places=2, default=0)
+    quantity = serializers.DecimalField(max_digits=14, decimal_places=4, min_value=Decimal('0.0001'))
+    unit_price = serializers.DecimalField(max_digits=14, decimal_places=4, required=False)
+    discount = serializers.DecimalField(max_digits=14, decimal_places=4, default=0)
 
 
 class SalePaymentInputSerializer(serializers.Serializer):
     method = serializers.ChoiceField(choices=SalePayment.Method.choices)
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2, min_value=Decimal('0'))
+    amount = serializers.DecimalField(max_digits=14, decimal_places=4, min_value=Decimal('0'))
 
 
 class SaleCreateSerializer(serializers.Serializer):
@@ -144,21 +144,21 @@ class SaleCreateSerializer(serializers.Serializer):
     exchange_rate = serializers.DecimalField(
         max_digits=18, decimal_places=10, required=False, allow_null=True,
     )
-    discount = serializers.DecimalField(max_digits=12, decimal_places=2, default=0)
-    amount_paid = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    discount = serializers.DecimalField(max_digits=14, decimal_places=4, default=0)
+    amount_paid = serializers.DecimalField(max_digits=14, decimal_places=4, required=False)
     notes = serializers.CharField(required=False, allow_blank=True)
     client_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=64)
     items = SaleItemInputSerializer(many=True)
 
     def validate_discount(self, value):
-        from stores.currency_service import quantize_money
-        return quantize_money(value)
+        from stores.currency_service import quantize_price
+        return quantize_price(value)
 
     def validate_amount_paid(self, value):
         if value is None:
             return value
-        from stores.currency_service import quantize_money
-        return quantize_money(value)
+        from stores.currency_service import quantize_price
+        return quantize_price(value)
 
     def validate_client_request_id(self, value):
         if value is None:

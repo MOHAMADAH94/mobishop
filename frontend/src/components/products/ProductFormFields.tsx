@@ -6,7 +6,7 @@ import { Input } from '../ui/Input'
 import { BarcodeScannerModal } from '../barcode/BarcodeScannerModal'
 import { api, getErrorMessage } from '../../api/client'
 import { normalizeImei } from '../../lib/productLookup'
-import { quantityStep } from '../../lib/quantity'
+import { clampQtyPrecision, quantityStep } from '../../lib/quantity'
 import { useToastStore } from '../../stores/toastStore'
 import type { Category } from '../../types'
 
@@ -77,7 +77,7 @@ export function ProductFormFields({
   const [generatingBarcode, setGeneratingBarcode] = useState(false)
 
   const qtyPrecision = form.allow_fractional_quantity
-    ? Math.min(3, Math.max(0, parseInt(form.quantity_precision, 10) || 0))
+    ? clampQtyPrecision(parseInt(form.quantity_precision, 10) || 0)
     : 0
   const qtyStep = form.allow_fractional_quantity ? quantityStep(qtyPrecision) : 1
 
@@ -203,15 +203,18 @@ export function ProductFormFields({
         onChange={(e) => setForm({ ...form, buy_price: e.target.value })}
         required
       />
-      <Input
-        label="سعر البيع"
-        type="number"
-        step="0.01"
-        min="0"
-        value={form.sell_price}
-        onChange={(e) => setForm({ ...form, sell_price: e.target.value })}
-        required
-      />
+      <div>
+        <Input
+          label="سعر البيع"
+          type="number"
+          step="0.0001"
+          min="0"
+          value={form.sell_price}
+          onChange={(e) => setForm({ ...form, sell_price: e.target.value })}
+          required
+        />
+        <p className="mt-1 text-xs text-[var(--text-muted)]">يدعم حتى 4 منازل عشرية (مثل 1.2345)</p>
+      </div>
       <Input
         label={quantityLabel}
         type="number"
@@ -274,6 +277,7 @@ export function ProductFormFields({
             <option value="1">1 (0.1)</option>
             <option value="2">2 (0.01)</option>
             <option value="3">3 (0.001)</option>
+            <option value="4">4 (0.0001)</option>
           </select>
         </div>
       )}

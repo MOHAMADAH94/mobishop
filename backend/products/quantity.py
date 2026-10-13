@@ -2,8 +2,8 @@
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
 
-MAX_PRECISION = 3
-QTY_QUANT = Decimal('0.001')
+MAX_PRECISION = 4
+QTY_QUANT = Decimal('0.0001')
 
 
 def to_qty(value) -> Decimal:

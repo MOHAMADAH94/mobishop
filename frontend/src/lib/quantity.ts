@@ -1,9 +1,18 @@
-/** Step for quantity inputs from product precision (0–3). */
+/** Max fractional places for product quantities (matches backend MAX_PRECISION). */
+export const MAX_QTY_PRECISION = 4
+
+export function clampQtyPrecision(precision = 0): number {
+  return Math.min(MAX_QTY_PRECISION, Math.max(0, Math.trunc(Number(precision) || 0)))
+}
+
+/** Step for quantity inputs from product precision (0–4). */
 export function quantityStep(precision = 0): number {
-  if (precision <= 0) return 1
-  if (precision === 1) return 0.1
-  if (precision === 2) return 0.01
-  return 0.001
+  const p = clampQtyPrecision(precision)
+  if (p <= 0) return 1
+  if (p === 1) return 0.1
+  if (p === 2) return 0.01
+  if (p === 3) return 0.001
+  return 0.0001
 }
 
 /**
@@ -21,7 +30,7 @@ export function formatQtyDisplay(
   if (!allow) {
     text = String(Math.round(n))
   } else {
-    const precision = Math.min(3, Math.max(0, opts?.precision ?? 2))
+    const precision = clampQtyPrecision(opts?.precision ?? 2)
     text = n.toFixed(precision).replace(/\.?0+$/, '')
     if (text === '-0') text = '0'
   }
@@ -31,7 +40,7 @@ export function formatQtyDisplay(
 }
 
 export function roundQty(value: number, precision = 0): number {
-  const p = Math.min(3, Math.max(0, precision))
+  const p = clampQtyPrecision(precision)
   const factor = 10 ** p
   return Math.round(value * factor) / factor
 }

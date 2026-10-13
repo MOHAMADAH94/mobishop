@@ -71,16 +71,21 @@ class Product(models.Model):
     barcode = models.CharField(max_length=100, blank=True)
     imei = models.CharField(max_length=20, blank=True)
     buy_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    sell_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    quantity = models.DecimalField(max_digits=14, decimal_places=3, default=0)
-    low_stock_threshold = models.DecimalField(max_digits=14, decimal_places=3, default=5)
+    sell_price = models.DecimalField(
+        max_digits=14,
+        decimal_places=4,
+        default=0,
+        help_text='سعر البيع — يدعم حتى 4 منازل عشرية',
+    )
+    quantity = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    low_stock_threshold = models.DecimalField(max_digits=14, decimal_places=4, default=5)
     allow_fractional_quantity = models.BooleanField(
         default=False,
         help_text='السماح ببيع كميات كسرية (مثل 1.5) — المنتجات الحالية تبقى صحيحة',
     )
     quantity_precision = models.PositiveSmallIntegerField(
         default=0,
-        help_text='عدد المنازل العشرية المسموحة (0–3) عند تفعيل الكميات الكسرية',
+        help_text='عدد المنازل العشرية المسموحة (0–4) عند تفعيل الكميات الكسرية',
     )
     unit = models.CharField(
         max_length=30,
@@ -173,9 +178,9 @@ class InventoryLog(models.Model):
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='inventory_logs')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='inventory_logs')
     action = models.CharField(max_length=20, choices=Action.choices)
-    quantity_before = models.DecimalField(max_digits=14, decimal_places=3)
-    quantity_change = models.DecimalField(max_digits=14, decimal_places=3)
-    quantity_after = models.DecimalField(max_digits=14, decimal_places=3)
+    quantity_before = models.DecimalField(max_digits=14, decimal_places=4)
+    quantity_change = models.DecimalField(max_digits=14, decimal_places=4)
+    quantity_after = models.DecimalField(max_digits=14, decimal_places=4)
     reference = models.CharField(max_length=100, blank=True)
     notes = models.TextField(blank=True)
     client_request_id = models.CharField(

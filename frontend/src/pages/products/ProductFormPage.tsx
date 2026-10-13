@@ -12,6 +12,7 @@ import { useAuthStore } from '../../stores/authStore'
 import { useCurrentStore } from '../../hooks/useCurrentStore'
 import { useToastStore } from '../../stores/toastStore'
 import { extractList } from '../../lib/apiHelpers'
+import { clampQtyPrecision, quantityStep } from '../../lib/quantity'
 import { adjustCachedProductQty, putCachedProduct } from '../../offline/cache'
 import { enqueueOperation, newClientRequestId } from '../../offline/outbox'
 import { useOnlineStatus } from '../../offline/useOfflineSync'
@@ -92,7 +93,7 @@ export function ProductFormPage() {
       description: form.description,
       allow_fractional_quantity: form.allow_fractional_quantity,
       quantity_precision: form.allow_fractional_quantity
-        ? Math.min(3, Math.max(0, parseInt(form.quantity_precision, 10) || 0))
+        ? clampQtyPrecision(parseInt(form.quantity_precision, 10) || 0)
         : 0,
       unit: form.unit,
     }
@@ -187,7 +188,7 @@ export function ProductFormPage() {
           is_low_stock: false,
           allow_fractional_quantity: form.allow_fractional_quantity,
           quantity_precision: form.allow_fractional_quantity
-            ? Math.min(3, Math.max(0, parseInt(form.quantity_precision, 10) || 0))
+            ? clampQtyPrecision(parseInt(form.quantity_precision, 10) || 0)
             : 0,
           unit: form.unit,
         })
@@ -244,7 +245,13 @@ export function ProductFormPage() {
             setForm={setForm}
             categories={categories}
             quantityLabel={isEdit ? 'الكمية' : 'الكمية الافتتاحية'}
-            quantityMin={isEdit ? 0 : form.allow_fractional_quantity ? 0.001 : 1}
+            quantityMin={
+              isEdit
+                ? 0
+                : form.allow_fractional_quantity
+                  ? quantityStep(clampQtyPrecision(parseInt(form.quantity_precision, 10) || 0))
+                  : 1
+            }
             showDescription
             catalogEnabled={catalogEnabled}
             imageUrl={imageUrl}

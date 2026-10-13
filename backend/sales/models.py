@@ -37,12 +37,12 @@ class Sale(models.Model):
     )
     status = models.CharField(max_length=25, choices=Status.choices, default=Status.COMPLETED)
     payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total_returned = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    subtotal = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    amount_paid = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    total_returned = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     notes = models.TextField(blank=True)
     client_request_id = models.CharField(
         max_length=64,
@@ -90,12 +90,12 @@ class SaleItem(models.Model):
     product_name = models.CharField(max_length=200)
     sku = models.CharField(max_length=50, blank=True)
     imei = models.CharField(max_length=20, blank=True)
-    quantity = models.DecimalField(max_digits=14, decimal_places=3)
-    quantity_returned = models.DecimalField(max_digits=14, decimal_places=3, default=0)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity = models.DecimalField(max_digits=14, decimal_places=4)
+    quantity_returned = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    unit_price = models.DecimalField(max_digits=14, decimal_places=4)
     cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    line_total = models.DecimalField(max_digits=12, decimal_places=2)
+    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    line_total = models.DecimalField(max_digits=14, decimal_places=4)
 
     @property
     def quantity_available_to_return(self):
@@ -113,7 +113,7 @@ class SaleReturn(models.Model):
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='sale_returns')
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='returns')
     return_number = models.CharField(max_length=50)
-    refund_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    refund_amount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     notes = models.TextField(blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -132,8 +132,8 @@ class SaleReturn(models.Model):
 class SaleReturnItem(models.Model):
     sale_return = models.ForeignKey(SaleReturn, on_delete=models.CASCADE, related_name='items')
     sale_item = models.ForeignKey(SaleItem, on_delete=models.CASCADE, related_name='return_lines')
-    quantity = models.DecimalField(max_digits=14, decimal_places=3)
-    refund_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    quantity = models.DecimalField(max_digits=14, decimal_places=4)
+    refund_amount = models.DecimalField(max_digits=14, decimal_places=4)
 
     def __str__(self):
         return f'{self.sale_item.product_name} x{self.quantity}'
@@ -152,7 +152,7 @@ class SalePayment(models.Model):
 
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='sale_payments')
     sale = models.ForeignKey(Sale, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=4)
     method = models.CharField(max_length=20, choices=Method.choices, default=Method.CASH)
     notes = models.CharField(max_length=255, blank=True)
     created_by = models.ForeignKey(

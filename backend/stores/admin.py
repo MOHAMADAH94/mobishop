@@ -1,9 +1,14 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.contrib.admin import helpers
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
+from django.shortcuts import redirect
+from django.template.response import TemplateResponse
+from django.urls import reverse
 from django.utils.html import format_html
 
 from stores.models import Employee, Role, Store, StoreCurrency, StoreMembership, StoreSettings, Subscription
+from users.services import purge_store_and_maybe_owner
 
 User = get_user_model()
 
@@ -20,6 +25,7 @@ class StoreAdmin(admin.ModelAdmin):
     search_fields = ('name', 'owner__username', 'owner__email', 'phone')
     autocomplete_fields = ('owner',)
     list_select_related = ('owner',)
+    actions = ('purge_store_and_owner',)
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
@@ -44,6 +50,70 @@ class StoreAdmin(admin.ModelAdmin):
     @admin.display(description='موظفون', ordering='_employees')
     def employees_count(self, obj):
         return getattr(obj, '_employees', '—')
+
+    @admin.action(description='حذف المتجر (+ المالك إن لم يعد له متاجر)')
+    def purge_store_and_owner(self, request, queryset):
+        """
+        يحذف المتجر وكل بياناته. إذا لم يعد المالك يملك متاجر/عضويات أخرى
+        وليس staff/superuser، يُحذف حسابه أيضاً.
+        """
+        if not request.user.is_superuser:
+            self.message_user(
+                request,
+                'هذا الإجراء متاح لمديري النظام فقط.',
+                level=messages.ERROR,
+            )
+            return
+
+        action_name = 'purge_store_and_owner'
+        back_url = reverse('admin:stores_store_changelist')
+
+        if request.POST.get('apply'):
+            confirm = (request.POST.get('confirm_text') or '').strip()
+            if confirm != 'DELETE':
+                self.message_user(
+                    request,
+                    'لم يتم الحذف: يجب كتابة DELETE للتأكيد.',
+                    level=messages.ERROR,
+                )
+                return redirect(back_url)
+
+            for store in queryset.select_related('owner'):
+                name = store.name
+                owner_name = store.owner.username if store.owner_id else '—'
+                result = purge_store_and_maybe_owner(
+                    store, actor=request.user, delete_owner_if_empty=True,
+                )
+                if result.get('owner_deleted'):
+                    self.message_user(
+                        request,
+                        f'حُذف المتجر «{name}» والمالك «{result["owner_username"]}».',
+                        level=messages.SUCCESS,
+                    )
+                else:
+                    self.message_user(
+                        request,
+                        f'حُذف المتجر «{name}» (المالك «{owner_name}» بقي لأن له متاجر/عضويات أخرى أو صلاحيات إدارية).',
+                        level=messages.SUCCESS,
+                    )
+            return None
+
+        stores = list(queryset.select_related('owner'))
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'تأكيد حذف المتجر',
+            'queryset': stores,
+            'stores': stores,
+            'opts': self.model._meta,
+            'action_checkbox_name': helpers.ACTION_CHECKBOX_NAME,
+            'action_name': action_name,
+            'back_url': back_url,
+        }
+        return TemplateResponse(
+            request,
+            'admin/stores/purge_store_confirmation.html',
+            context,
+        )
 
 
 @admin.register(Subscription)

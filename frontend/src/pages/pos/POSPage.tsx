@@ -13,14 +13,17 @@ import {
   convertAmount,
   displayRateFromInternal,
   rateQuoteLabel,
+  parsePrice,
+  priceInputValue,
   roundMoney,
+  roundPrice,
   usesCurrencyToBaseQuote,
   resolveCurrency,
 } from '../../lib/currencies'
 import { lookupProductByCode } from '../../lib/productLookup'
 import { extractList } from '../../lib/apiHelpers'
 import { downloadPdfSafe } from '../../lib/downloadPdf'
-import { formatQtyDisplay, parseQtyInput, quantityStep, roundQty } from '../../lib/quantity'
+import { clampQtyPrecision, formatQtyDisplay, parseQtyInput, quantityStep, roundQty } from '../../lib/quantity'
 import { CustomerDebtRefs } from '../../components/customers/CustomerDebtRefs'
 import {
   cachedProductToProduct,
@@ -63,7 +66,7 @@ function productAllowsFractional(product: Product) {
 }
 
 function productPrecision(product: Product) {
-  return Math.min(3, Math.max(0, product.quantity_precision ?? 0))
+  return clampQtyPrecision(product.quantity_precision ?? 0)
 }
 
 function productQtyStep(product: Product) {
@@ -255,7 +258,7 @@ export function POSPage() {
             initial,
             productAllowsFractional(normalized) ? productPrecision(normalized) : 0,
           ),
-          unit_price: parseFloat(String(normalized.sell_price)),
+          unit_price: parsePrice(normalized.sell_price),
         },
       ]
     })
@@ -349,12 +352,18 @@ export function POSPage() {
   }
 
   const updateCartPrice = (productId: number, raw: string) => {
+    if (raw.trim() === '') {
+      setCart((c) =>
+        c.map((x) => (x.product.id === productId ? { ...x, unit_price: 0 } : x)),
+      )
+      return
+    }
     const num = parseFloat(raw)
-    if (raw !== '' && (Number.isNaN(num) || num < 0)) return
+    if (Number.isNaN(num) || num < 0) return
     setCart((c) =>
       c.map((x) =>
         x.product.id === productId
-          ? { ...x, unit_price: raw === '' ? 0 : num }
+          ? { ...x, unit_price: roundPrice(num) }
           : x,
       ),
     )
@@ -376,8 +385,23 @@ export function POSPage() {
     return rates
   })()
 
+  /** تحويل للعرض/الدفع حتى 4 منازل (أسعار البيع والإجماليات والمدفوعات). */
   const toPayment = (amount: number) =>
-    convertAmount(amount, baseCurrency, paymentCurrency, baseCurrency, effectiveRates)
+    convertAmount(amount, baseCurrency, paymentCurrency, baseCurrency, effectiveRates, 4)
+
+  /** مبلغ سطر السلة: يحافظ على دقة سعر الوحدة (حتى 4) قبل تقريب المدفوعات. */
+  const formatLineAmount = (amountBase: number) =>
+    formatMoney(
+      convertAmount(
+        amountBase,
+        baseCurrency,
+        paymentCurrency,
+        baseCurrency,
+        effectiveRates,
+        4,
+      ),
+      paymentCurrency,
+    )
 
   const subtotalBase = cart.reduce((s, c) => s + c.unit_price * c.quantity, 0)
   const discountNum = parseFloat(discount) || 0
@@ -394,13 +418,13 @@ export function POSPage() {
   const paidSum = (() => {
     const explicit = paymentLines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
     if (paymentLines.length === 1 && paymentLines[0].amount.trim() === '') {
-      return allowCredit ? 0 : roundMoney(total)
+      return allowCredit ? 0 : roundPrice(total)
     }
-    return roundMoney(explicit)
+    return roundPrice(explicit)
   })()
 
-  const remainingDue = roundMoney(Math.max(0, total - paidSum))
-  const hasCredit = allowCredit && remainingDue > 0.001
+  const remainingDue = roundPrice(Math.max(0, total - paidSum))
+  const hasCredit = allowCredit && remainingDue > 0.00005
 
   const setLineMethod = (index: number, method: SalePaymentMethod) => {
     setPaymentLines((lines) => lines.map((l, i) => (i === index ? { ...l, method } : l)))
@@ -428,38 +452,38 @@ export function POSPage() {
       (s, l, i) => (i === index ? s : s + (parseFloat(l.amount) || 0)),
       0,
     )
-    const fill = roundMoney(Math.max(0, total - others))
-    setLineAmount(index, String(fill))
+    const fill = roundPrice(Math.max(0, total - others))
+    setLineAmount(index, priceInputValue(fill))
   }
 
   const buildPaymentsPayload = () => {
     if (paymentLines.length === 1 && paymentLines[0].amount.trim() === '' && !allowCredit) {
-      return [{ method: paymentLines[0].method, amount: roundMoney(total) }]
+      return [{ method: paymentLines[0].method, amount: roundPrice(total) }]
     }
     return paymentLines
-      .map((l) => ({ method: l.method, amount: roundMoney(parseFloat(l.amount) || 0) }))
+      .map((l) => ({ method: l.method, amount: roundPrice(parseFloat(l.amount) || 0) }))
       .filter((l) => l.amount > 0)
   }
 
   const checkout = async () => {
     if (cart.length === 0) return
     const payments = buildPaymentsPayload()
-    const allocated = roundMoney(payments.reduce((s, p) => s + p.amount, 0))
-    const remaining = roundMoney(Math.max(0, total - allocated))
+    const allocated = roundPrice(payments.reduce((s, p) => s + p.amount, 0))
+    const remaining = roundPrice(Math.max(0, total - allocated))
 
-    if (remaining > 0.001 && !allowCredit) {
+    if (remaining > 0.00005 && !allowCredit) {
       toast('المبلغ المدفوع أقل من الإجمالي — فعّل الآجل أو أكمل الدفع', 'error')
       return
     }
-    if (remaining > 0.001 && !customerId) {
+    if (remaining > 0.00005 && !customerId) {
       toast('المتبقي الآجل يتطلب اختيار عميل', 'error')
       return
     }
-    if (allocated > total + 0.001) {
+    if (allocated > total + 0.00005) {
       toast('مجموع الدفعات يتجاوز إجمالي الفاتورة', 'error')
       return
     }
-    if (payments.length === 0 && remaining <= 0.001) {
+    if (payments.length === 0 && remaining <= 0.00005) {
       toast('أدخل مبلغ دفع واحداً على الأقل', 'error')
       return
     }
@@ -470,7 +494,7 @@ export function POSPage() {
     setLoading(true)
     const clientRequestId = newClientRequestId()
     const headerMethod =
-      remaining > 0.001
+      remaining > 0.00005
         ? 'partial'
         : payments.length === 1
           ? payments[0].method
@@ -480,13 +504,13 @@ export function POSPage() {
       customer_id: customerId ? parseInt(customerId, 10) : null,
       payment_method: headerMethod,
       currency: paymentCurrency,
-      discount: roundMoney(discountNum),
+      discount: roundPrice(discountNum),
       amount_paid: allocated,
       payments,
       items: cart.map((c) => ({
         product_id: c.product.id,
         quantity: c.quantity,
-        unit_price: roundMoney(c.unit_price),
+        unit_price: roundPrice(c.unit_price),
       })),
       ...(paymentCurrency !== baseCurrency
         ? (() => {
@@ -658,18 +682,18 @@ export function POSPage() {
                               <input
                                 type="number"
                                 min={0}
-                                step="0.01"
-                                value={item.unit_price}
+                                step="0.0001"
+                                value={priceInputValue(item.unit_price)}
                                 onChange={(e) => updateCartPrice(item.product.id, e.target.value)}
-                                className="w-24 max-w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-2 py-1.5 text-left font-medium text-[var(--text)] [font-variant-numeric:tabular-nums] sm:py-1"
+                                className="w-28 max-w-full rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-2 py-1.5 text-left font-medium text-[var(--text)] [font-variant-numeric:tabular-nums] sm:py-1"
                                 lang="en"
                               />
                             </label>
                             <span className="text-[var(--text-muted)]">
-                              = {formatMoney(toPayment(item.unit_price * Number(item.quantity)), paymentCurrency)}
+                              = {formatLineAmount(item.unit_price * Number(item.quantity))}
                             </span>
                           </div>
-                          {item.unit_price > parseFloat(String(item.product.sell_price)) && (
+                          {item.unit_price > parsePrice(item.product.sell_price) + 1e-9 && (
                             <p className="mt-0.5 text-xs text-emerald-600">
                               أعلى من السعر الافتراضي ({formatMoney(item.product.sell_price, baseCurrency)})
                             </p>
@@ -827,12 +851,12 @@ export function POSPage() {
                     <div className="flex gap-2">
                       <input
                         type="number"
-                        step="0.01"
+                        step="0.0001"
                         min="0"
                         value={line.amount}
                         placeholder={
                           paymentLines.length === 1 && !allowCredit
-                            ? String(roundMoney(total))
+                            ? priceInputValue(total)
                             : '0'
                         }
                         onChange={(e) => setLineAmount(index, e.target.value)}

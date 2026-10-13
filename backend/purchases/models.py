@@ -94,7 +94,7 @@ class PurchaseItem(models.Model):
     )
     product_name = models.CharField(max_length=200)
     sku = models.CharField(max_length=50, blank=True)
-    quantity = models.DecimalField(max_digits=14, decimal_places=3)
+    quantity = models.DecimalField(max_digits=14, decimal_places=4)
     unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
     line_total = models.DecimalField(max_digits=12, decimal_places=2)
 

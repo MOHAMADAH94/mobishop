@@ -15,9 +15,10 @@ from sales.customer_account import (
     sale_outstanding,
 )
 from stores.currency_service import (
+    FOURPLACES,
     convert_amount,
     get_base_currency,
-    quantize_money,
+    quantize_price,
     resolve_rate_override,
     snapshot_rate,
     validate_transaction_currency,
@@ -56,7 +57,7 @@ def _normalize_payment_lines(payments, payment_method, amount_paid, total):
             if method in seen:
                 raise ValidationError('لا تكرر نفس طريقة الدفع في التقسيم.')
             seen.add(method)
-            amount = quantize_money(Decimal(str(row.get('amount', 0))))
+            amount = quantize_price(Decimal(str(row.get('amount', 0))))
             if amount < 0:
                 raise ValidationError('مبلغ الدفع لا يمكن أن يكون سالباً.')
             if amount == 0:
@@ -67,17 +68,17 @@ def _normalize_payment_lines(payments, payment_method, amount_paid, total):
     else:
         method = payment_method or Sale.PaymentMethod.CASH
         if method == Sale.PaymentMethod.PARTIAL:
-            paid = quantize_money(amount_paid if amount_paid is not None else Decimal('0'))
+            paid = quantize_price(amount_paid if amount_paid is not None else Decimal('0'))
             if paid > 0:
                 lines.append({'method': SalePayment.Method.CASH, 'amount': paid})
         elif method in tender_methods:
-            paid = quantize_money(amount_paid if amount_paid is not None else total)
+            paid = quantize_price(amount_paid if amount_paid is not None else total)
             lines.append({'method': method, 'amount': paid})
         else:
             raise ValidationError('طريقة الدفع غير صالحة.')
 
     allocated = sum((x['amount'] for x in lines), Decimal('0'))
-    allocated = quantize_money(allocated)
+    allocated = quantize_price(allocated)
     if allocated > total:
         raise ValidationError('مجموع الدفعات يتجاوز إجمالي الفاتورة.')
     return lines, allocated
@@ -107,7 +108,7 @@ def create_sale(store, user, items_data, customer=None, payment_method='cash',
     )
     rate = snapshot_rate(store, pay_currency, rate_override)
 
-    discount = quantize_money(discount)
+    discount = quantize_price(discount)
     subtotal = Decimal('0')
     sale_items = []
 
@@ -123,19 +124,22 @@ def create_sale(store, user, items_data, customer=None, payment_method='cash',
         if product.buy_price > 0 and to_qty(product.quantity) < qty:
             raise ValidationError(f'الكمية غير كافية للمنتج: {product.name}')
 
-        unit_price_base = Decimal(str(item.get('unit_price', product.sell_price)))
-        line_discount_base = Decimal(str(item.get('discount', 0)))
-        line_total_base = quantize_money((unit_price_base * qty) - line_discount_base)
+        unit_price_base = quantize_price(item.get('unit_price', product.sell_price))
+        line_discount_base = quantize_price(item.get('discount', 0))
+        line_total_base = quantize_price((unit_price_base * qty) - line_discount_base)
         subtotal += line_total_base
 
         unit_price = convert_amount(
             unit_price_base, base_currency, pay_currency, store, rate_override,
+            places=FOURPLACES,
         )
         line_discount = convert_amount(
             line_discount_base, base_currency, pay_currency, store, rate_override,
+            places=FOURPLACES,
         )
         line_total = convert_amount(
             line_total_base, base_currency, pay_currency, store, rate_override,
+            places=FOURPLACES,
         )
 
         sale_items.append({
@@ -153,24 +157,28 @@ def create_sale(store, user, items_data, customer=None, payment_method='cash',
     discount_base = discount
     discount_converted = convert_amount(
         discount_base, base_currency, pay_currency, store, rate_override,
+        places=FOURPLACES,
     )
-    tax_amount = (subtotal - discount_base) * tax_rate
-    total_base = subtotal - discount_base + tax_amount
+    tax_amount = quantize_price((subtotal - discount_base) * tax_rate)
+    total_base = quantize_price(subtotal - discount_base + tax_amount)
     total = convert_amount(
         total_base, base_currency, pay_currency, store, rate_override,
+        places=FOURPLACES,
     )
     tax_amount_converted = convert_amount(
         tax_amount, base_currency, pay_currency, store, rate_override,
+        places=FOURPLACES,
     )
     subtotal_converted = convert_amount(
         subtotal, base_currency, pay_currency, store, rate_override,
+        places=FOURPLACES,
     )
-    total = quantize_money(total)
+    total = quantize_price(total)
 
     payment_lines, allocated = _normalize_payment_lines(
         payments, payment_method, amount_paid, total,
     )
-    remaining = quantize_money(total - allocated)
+    remaining = quantize_price(total - allocated)
 
     if remaining > 0:
         if not customer:
@@ -255,7 +263,7 @@ def record_sale_payment(sale, amount, user, method='cash', notes=''):
     if sale.status == Sale.Status.CANCELLED:
         raise ValidationError('لا يمكن الدفع على فاتورة ملغاة.')
 
-    amount = Decimal(str(amount))
+    amount = quantize_price(amount)
     due = sale_outstanding(sale)
     if amount <= 0:
         raise ValidationError('مبلغ الدفع يجب أن يكون أكبر من صفر.')
@@ -263,7 +271,7 @@ def record_sale_payment(sale, amount, user, method='cash', notes=''):
         raise ValidationError(f'المتبقي على الفاتورة: {due}')
 
     sale = Sale.objects.select_for_update().get(pk=sale.pk)
-    sale.amount_paid += amount
+    sale.amount_paid = quantize_price(sale.amount_paid + amount)
 
     if sale_outstanding(sale) <= 0:
         sale.payment_method = method
@@ -314,12 +322,12 @@ def process_partial_return(sale, user, items_data, notes=''):
             )
 
         unit_refund = sale_item.unit_price - (sale_item.discount / sale_item.quantity)
-        line_refund = unit_refund * qty
+        line_refund = quantize_price(unit_refund * qty)
         refund_subtotal += line_refund
         return_lines.append((sale_item, qty, line_refund))
 
-    refund_tax = refund_subtotal * tax_rate
-    refund_total = refund_subtotal + refund_tax
+    refund_tax = quantize_price(refund_subtotal * tax_rate)
+    refund_total = quantize_price(refund_subtotal + refund_tax)
 
     sale_return = SaleReturn.objects.create(
         store=store,

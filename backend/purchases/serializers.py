@@ -105,7 +105,7 @@ class RecordPurchasePaymentSerializer(serializers.Serializer):
 
 class PurchaseItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
-    quantity = serializers.DecimalField(max_digits=14, decimal_places=3, min_value=Decimal('0.001'))
+    quantity = serializers.DecimalField(max_digits=14, decimal_places=4, min_value=Decimal('0.0001'))
     unit_cost = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
 
 

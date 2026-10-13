@@ -159,15 +159,15 @@ export function InventoryPage() {
                           sign +
                           formatQtyDisplay(Math.abs(change), {
                             allowFractional: true,
-                            precision: 3,
+                            precision: 4,
                           })
                         )
                       })()}
                     </td>
                     <td className="py-3 text-[var(--text-muted)]">
-                      {formatQtyDisplay(log.quantity_before, { allowFractional: true, precision: 3 })}
+                      {formatQtyDisplay(log.quantity_before, { allowFractional: true, precision: 4 })}
                       {' → '}
-                      {formatQtyDisplay(log.quantity_after, { allowFractional: true, precision: 3 })}
+                      {formatQtyDisplay(log.quantity_after, { allowFractional: true, precision: 4 })}
                     </td>
                     <td className="py-3">{log.reference || '—'}</td>
                     <td className="py-3">{log.created_by_name}</td>

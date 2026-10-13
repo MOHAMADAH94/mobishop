@@ -23,7 +23,7 @@ import {
 import { useToastStore } from '../../stores/toastStore'
 import { useCurrentStore, useStoreVersion } from '../../hooks/useCurrentStore'
 import { formatMoney, cn } from '../../lib/utils'
-import { formatQtyDisplay } from '../../lib/quantity'
+import { clampQtyPrecision, formatQtyDisplay } from '../../lib/quantity'
 import { lookupProductByCode } from '../../lib/productLookup'
 import { extractList } from '../../lib/apiHelpers'
 import {
@@ -258,7 +258,7 @@ export function PurchaseIntakePage() {
         description: productForm.description,
         allow_fractional_quantity: productForm.allow_fractional_quantity,
         quantity_precision: productForm.allow_fractional_quantity
-          ? Math.min(3, Math.max(0, parseInt(productForm.quantity_precision, 10) || 0))
+          ? clampQtyPrecision(parseInt(productForm.quantity_precision, 10) || 0)
           : 0,
         unit: productForm.unit,
       }

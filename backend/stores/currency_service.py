@@ -8,6 +8,7 @@ from stores.currencies import is_allowed_currency, is_hard_currency, normalize_c
 from stores.models import StoreCurrency
 
 TWOPLACES = Decimal('0.01')
+FOURPLACES = Decimal('0.0001')  # أسعار البيع/الوحدة حتى 4 منازل
 RATE_PLACES = Decimal('0.0000000001')  # 10 خانات داخلية لسعر الصرف
 QUANTIZE = ROUND_HALF_UP
 
@@ -15,6 +16,11 @@ QUANTIZE = ROUND_HALF_UP
 def quantize_money(value) -> Decimal:
     """تقريب المبالغ المالية إلى خانتين عشريتين."""
     return Decimal(str(value)).quantize(TWOPLACES, rounding=QUANTIZE)
+
+
+def quantize_price(value) -> Decimal:
+    """تقريب سعر البيع/سعر الوحدة حتى 4 منازل عشرية."""
+    return Decimal(str(value)).quantize(FOURPLACES, rounding=QUANTIZE)
 
 
 def quantize_rate(value) -> Decimal:
@@ -132,28 +138,42 @@ def resolve_rate_override(store, pay_currency, exchange_rate_override=None, disp
     return None
 
 
-def convert_amount(amount, from_currency, to_currency, store, rate_override=None) -> Decimal:
-    """Convert monetary amount between two store currencies."""
+def convert_amount(
+    amount,
+    from_currency,
+    to_currency,
+    store,
+    rate_override=None,
+    places=None,
+) -> Decimal:
+    """Convert monetary amount between two store currencies.
+
+    ``places`` defaults to 2 (money). Pass ``FOURPLACES`` for unit/sell prices.
+    """
+    q = TWOPLACES if places is None else places
     value = Decimal(str(amount))
     from_code = normalize_currency(from_currency)
     to_code = normalize_currency(to_currency)
     if from_code == to_code:
-        return value.quantize(TWOPLACES, rounding=QUANTIZE)
+        return value.quantize(q, rounding=QUANTIZE)
 
     base = get_base_currency(store)
     if from_code != base:
         from_rate = get_rate_to_base(store, from_code, rate_override)
         value = value * from_rate
     if to_code == base:
-        return value.quantize(TWOPLACES, rounding=QUANTIZE)
+        return value.quantize(q, rounding=QUANTIZE)
 
     to_rate = get_rate_to_base(store, to_code)
-    return (value / to_rate).quantize(TWOPLACES, rounding=QUANTIZE)
+    return (value / to_rate).quantize(q, rounding=QUANTIZE)
 
 
 def amount_in_base(amount, exchange_rate_to_base) -> Decimal:
-    """Convert a transaction-currency amount to base using the stored snapshot rate."""
-    return quantize_money(
+    """Convert a transaction-currency amount to base using the stored snapshot rate.
+
+    Uses up to 4 decimal places so sale unit prices (e.g. 1.234) are not collapsed to 2dp.
+    """
+    return quantize_price(
         Decimal(str(amount)) * Decimal(str(exchange_rate_to_base))
     )
 

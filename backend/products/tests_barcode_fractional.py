@@ -96,6 +96,38 @@ class FractionalQtyTests(TestCase):
         qty = normalize_product_qty(self.frac, '12.5')
         self.assertEqual(qty, Decimal('12.500'))
 
+    def test_precision_4_accepts_four_places(self):
+        p = Product.objects.create(
+            store=self.store, name='Fine', buy_price=0, sell_price=1, quantity=10,
+            allow_fractional_quantity=True, quantity_precision=4, unit='كغ',
+        )
+        qty = normalize_product_qty(p, '1.2345')
+        self.assertEqual(qty, Decimal('1.2345'))
+        # Rounds half-up at 5th place when precision is 4
+        self.assertEqual(normalize_product_qty(p, '1.23456'), Decimal('1.2346'))
+
+    def test_sell_price_four_decimals_on_sale(self):
+        p = Product.objects.create(
+            store=self.store, name='FinePrice', buy_price=0, sell_price='1.2345', quantity=100,
+            allow_fractional_quantity=True, quantity_precision=4,
+        )
+        r = self.client.post(
+            '/api/sales/create/',
+            {
+                'payment_method': 'cash',
+                'payments': [{'method': 'cash', 'amount': '1.2345'}],
+                'items': [{'product_id': p.id, 'quantity': '1', 'unit_price': '1.2345'}],
+            },
+            format='json',
+        )
+        self.assertEqual(r.status_code, 201, r.data)
+        from sales.models import Sale, SaleItem
+        item = SaleItem.objects.get(sale_id=r.data['id'])
+        self.assertEqual(item.unit_price, Decimal('1.2345'))
+        self.assertEqual(item.line_total, Decimal('1.2345'))
+        sale = Sale.objects.get(pk=r.data['id'])
+        self.assertEqual(sale.total, Decimal('1.2345'))
+
     def test_sale_fractional_updates_stock(self):
         r = self.client.post(
             '/api/sales/create/',

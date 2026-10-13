@@ -7,7 +7,7 @@ class Customer(models.Model):
     phone = models.CharField(max_length=20)
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
-    debt = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    debt = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     client_request_id = models.CharField(

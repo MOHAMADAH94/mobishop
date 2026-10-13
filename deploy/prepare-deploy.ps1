@@ -52,10 +52,11 @@ Mobishop build $buildId
 Frontend bundle: $jsName
 
 === This build ===
-Barcode print: button on product form + products list + header (not only multi-select)
-POS fix: stock qty Number coercion; mobile cart layout
-Split payments / fractional qty / Cairo font (prior)
-Migrations: products.0010, sales.0010, purchases.0005
+POS payment totals/amounts now up to 4dp (was stuck at 2dp)
+Sale money fields + customer.debt: decimal_places=4
+Sell price + qty precision up to 4dp
+Migrations REQUIRED:
+  products.0011+0012, sales.0011+0012+0013, purchases.0006, customers.0004
 
 === Modules ===
 Core: POS, products, inventory, customers, suppliers, purchases, repairs, expenses, multi-currency, roles, cashbox

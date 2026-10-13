@@ -56,9 +56,38 @@ export function rateQuoteLabel(baseCurrency: string, currencyCode: string): stri
   return `1 ${base} = … ${code}`
 }
 
-/** Round monetary amounts to 2 decimal places. */
+/** Round to N decimal places (0–4). */
+export function roundToDecimals(value: number, decimals = 2): number {
+  const d = Math.min(4, Math.max(0, Math.trunc(decimals)))
+  const f = 10 ** d
+  return Math.round((value + Number.EPSILON) * f) / f
+}
+
+/** Round monetary amounts to 2 decimal places (totals, payments, discounts). */
 export function roundMoney(value: number): number {
-  return Math.round((value + Number.EPSILON) * 100) / 100
+  return roundToDecimals(value, 2)
+}
+
+/** Round unit/sell prices up to 4 decimal places. */
+export function roundPrice(value: number): number {
+  return roundToDecimals(value, 4)
+}
+
+/** Parse sell/unit price from API/form without collapsing to 2 decimals. */
+export function parsePrice(value: string | number | null | undefined): number {
+  if (value == null || value === '') return 0
+  const n = typeof value === 'number' ? value : parseFloat(String(value).trim())
+  if (!Number.isFinite(n) || n < 0) return 0
+  return roundPrice(n)
+}
+
+/** Stable string for number inputs (up to 4 dp, no trailing zeros). */
+export function priceInputValue(value: number): string {
+  if (!Number.isFinite(value)) return ''
+  return roundPrice(value)
+    .toFixed(4)
+    .replace(/(\.\d*?[1-9])0+$/, '$1')
+    .replace(/\.0+$/, '')
 }
 
 export function rateToBaseFromDisplay(
@@ -113,25 +142,28 @@ export function buildRateMap(currencies: { code: string; rate_to_base: string }[
   return map
 }
 
-/** Convert amount between currencies using store rates (1 unit = rate_to_base of base). */
+/** Convert amount between currencies using store rates (1 unit = rate_to_base of base).
+ *  ``decimals`` defaults to 2 (money). Use 4 for unit/sell prices. */
 export function convertAmount(
   amount: number,
   fromCode: string,
   toCode: string,
   baseCurrency: string,
   rates: Map<string, number>,
+  decimals = 2,
 ): number {
+  const round = (v: number) => roundToDecimals(v, decimals)
   const from = normalizeCurrency(fromCode)
   const to = normalizeCurrency(toCode)
   const base = normalizeCurrency(baseCurrency)
-  if (from === to) return roundMoney(amount)
+  if (from === to) return round(amount)
   let inBase = amount
   if (from !== base) {
     const fromRate = rates.get(from) ?? 1
     inBase = amount * fromRate
   }
-  if (to === base) return roundMoney(inBase)
+  if (to === base) return round(inBase)
   const toRate = rates.get(to) ?? 1
-  return roundMoney(toRate > 0 ? inBase / toRate : amount)
+  return round(toRate > 0 ? inBase / toRate : amount)
 }
 

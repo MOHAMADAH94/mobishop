@@ -116,8 +116,22 @@ def _product_label_paragraph(product_name, style, *, imei='', sku=''):
 
 
 def _money(amount, currency='USD'):
+    """تنسيق مبلغ: منزلتان على الأقل، وحتى 4 عند الحاجة (أسعار البيع)."""
     sym = '$' if currency == 'USD' else currency
-    return f'{sym} {amount:,.2f}'
+    try:
+        from decimal import Decimal, ROUND_HALF_UP
+
+        q = Decimal(str(amount)).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
+        sign = '-' if q < 0 else ''
+        q = abs(q)
+        text = format(q, 'f')
+        whole, _, frac = text.partition('.')
+        frac = (frac or '').rstrip('0')
+        if len(frac) < 2:
+            frac = frac.ljust(2, '0')
+        return f'{sym} {sign}{int(whole):,}.{frac}'
+    except Exception:
+        return f'{sym} {float(amount):,.2f}'
 
 
 @lru_cache(maxsize=4)

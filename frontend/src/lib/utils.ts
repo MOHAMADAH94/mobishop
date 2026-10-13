@@ -20,20 +20,17 @@ export function formatNumber(value: string | number, decimals = 0) {
 export function formatMoney(value: string | number, currency = DEFAULT_CURRENCY) {
   const num = typeof value === 'string' ? parseFloat(value) : value
   const code = resolveCurrency(currency)
+  // إجماليات/مدفوعات تظهر منزلتين؛ أسعار البيع قد تصل إلى 4 منازل عند الحاجة
+  const opts: Intl.NumberFormatOptions = {
+    style: 'currency',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+    numberingSystem: 'latn',
+  }
   try {
-    return new Intl.NumberFormat(EN, {
-      style: 'currency',
-      currency: code,
-      minimumFractionDigits: 2,
-      numberingSystem: 'latn',
-    }).format(num || 0)
+    return new Intl.NumberFormat(EN, { ...opts, currency: code }).format(num || 0)
   } catch {
-    return new Intl.NumberFormat(EN, {
-      style: 'currency',
-      currency: DEFAULT_CURRENCY,
-      minimumFractionDigits: 2,
-      numberingSystem: 'latn',
-    }).format(num || 0)
+    return new Intl.NumberFormat(EN, { ...opts, currency: DEFAULT_CURRENCY }).format(num || 0)
   }
 }
 
