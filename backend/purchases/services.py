@@ -16,8 +16,10 @@ from purchases.supplier_account import (
     purchase_outstanding,
 )
 from stores.currency_service import (
+    FOURPLACES,
     convert_amount,
     get_base_currency,
+    quantize_price,
     snapshot_rate,
     validate_transaction_currency,
 )
@@ -59,17 +61,19 @@ def create_purchase(store, user, items_data, supplier=None, payment_method='cash
         except ValueError as exc:
             raise ValidationError(str(exc)) from exc
 
-        unit_cost_base = Decimal(str(item.get('unit_cost', product.buy_price)))
+        unit_cost_base = quantize_price(item.get('unit_cost', product.buy_price))
         if unit_cost_base < 0:
             raise ValidationError(f'سعر الشراء غير صالح للمنتج: {product.name}')
-        line_total_base = unit_cost_base * qty
+        line_total_base = quantize_price(unit_cost_base * qty)
         subtotal += line_total_base
 
         unit_cost = convert_amount(
             unit_cost_base, base_currency, pay_currency, store, exchange_rate_override,
+            places=FOURPLACES,
         )
         line_total = convert_amount(
             line_total_base, base_currency, pay_currency, store, exchange_rate_override,
+            places=FOURPLACES,
         )
 
         purchase_items.append({
@@ -82,26 +86,30 @@ def create_purchase(store, user, items_data, supplier=None, payment_method='cash
             'line_total': line_total,
         })
 
-    discount_base = Decimal(str(discount))
+    discount_base = quantize_price(discount)
     discount_converted = convert_amount(
         discount_base, base_currency, pay_currency, store, exchange_rate_override,
+        places=FOURPLACES,
     )
-    tax_amount = (subtotal - discount_base) * tax_rate
-    total_base = subtotal - discount_base + tax_amount
+    tax_amount = quantize_price((subtotal - discount_base) * tax_rate)
+    total_base = quantize_price(subtotal - discount_base + tax_amount)
     total = convert_amount(
         total_base, base_currency, pay_currency, store, exchange_rate_override,
+        places=FOURPLACES,
     )
     tax_amount_converted = convert_amount(
         tax_amount, base_currency, pay_currency, store, exchange_rate_override,
+        places=FOURPLACES,
     )
     subtotal_converted = convert_amount(
         subtotal, base_currency, pay_currency, store, exchange_rate_override,
+        places=FOURPLACES,
     )
 
     if amount_paid is None:
         amount_paid = total
     else:
-        amount_paid = Decimal(str(amount_paid))
+        amount_paid = quantize_price(amount_paid)
 
     if payment_method == Purchase.PaymentMethod.PARTIAL:
         if not supplier:

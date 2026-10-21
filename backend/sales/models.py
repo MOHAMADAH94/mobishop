@@ -93,7 +93,7 @@ class SaleItem(models.Model):
     quantity = models.DecimalField(max_digits=14, decimal_places=4)
     quantity_returned = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     unit_price = models.DecimalField(max_digits=14, decimal_places=4)
-    cost_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    cost_price = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     line_total = models.DecimalField(max_digits=14, decimal_places=4)
 

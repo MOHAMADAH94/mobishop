@@ -23,6 +23,7 @@ import {
 import { useToastStore } from '../../stores/toastStore'
 import { useCurrentStore, useStoreVersion } from '../../hooks/useCurrentStore'
 import { formatMoney, cn } from '../../lib/utils'
+import { parsePrice, priceInputValue, roundPrice } from '../../lib/currencies'
 import { clampQtyPrecision, formatQtyDisplay } from '../../lib/quantity'
 import { lookupProductByCode } from '../../lib/productLookup'
 import { extractList } from '../../lib/apiHelpers'
@@ -161,13 +162,17 @@ export function PurchaseIntakePage() {
   }, [productForm.imei, productForm.quantity])
 
   const addToCart = (product: Product, quantity = 1, unitCost?: number) => {
-    const cost = unitCost ?? parseFloat(product.buy_price)
+    const cost = roundPrice(unitCost ?? parsePrice(product.buy_price))
     setCart((prev) => {
       const existing = prev.find((c) => c.product.id === product.id)
       if (existing) {
         return prev.map((c) =>
           c.product.id === product.id
-            ? { ...c, quantity: c.quantity + quantity, unit_cost: unitCost ?? c.unit_cost }
+            ? {
+                ...c,
+                quantity: c.quantity + quantity,
+                unit_cost: unitCost != null ? roundPrice(unitCost) : c.unit_cost,
+              }
             : c,
         )
       }
@@ -319,12 +324,18 @@ export function PurchaseIntakePage() {
   }
 
   const updateCartCost = (productId: number, raw: string) => {
+    if (raw.trim() === '') {
+      setCart((c) =>
+        c.map((x) => (x.product.id === productId ? { ...x, unit_cost: 0 } : x)),
+      )
+      return
+    }
     const num = parseFloat(raw)
-    if (raw !== '' && (Number.isNaN(num) || num < 0)) return
+    if (Number.isNaN(num) || num < 0) return
     setCart((c) =>
       c.map((x) =>
         x.product.id === productId
-          ? { ...x, unit_cost: raw === '' ? 0 : num }
+          ? { ...x, unit_cost: roundPrice(num) }
           : x,
       ),
     )
@@ -352,12 +363,12 @@ export function PurchaseIntakePage() {
       supplier_id: supplierId ? parseInt(supplierId, 10) : null,
       payment_method: paymentMethod,
       discount: discountNum,
-      amount_paid: amountPaid ? parseFloat(amountPaid) : total,
+      amount_paid: amountPaid ? roundPrice(parseFloat(amountPaid)) : roundPrice(total),
       notes,
       items: cart.map((c) => ({
         product_id: c.product.id,
         quantity: c.quantity,
-        unit_cost: c.unit_cost,
+        unit_cost: roundPrice(c.unit_cost),
       })),
     }
     const dependsOn = cart
@@ -550,10 +561,10 @@ export function PurchaseIntakePage() {
                           <input
                             type="number"
                             min={0}
-                            step="0.01"
-                            value={item.unit_cost}
+                            step="0.0001"
+                            value={priceInputValue(item.unit_cost)}
                             onChange={(e) => updateCartCost(item.product.id, e.target.value)}
-                            className="w-24 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-2 py-1 text-left font-medium text-[var(--text)] [font-variant-numeric:tabular-nums]"
+                            className="w-28 rounded-lg border border-[var(--border)] bg-[var(--bg-card)] px-2 py-1 text-left font-medium text-[var(--text)] [font-variant-numeric:tabular-nums]"
                             lang="en"
                           />
                         </label>

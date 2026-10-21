@@ -194,15 +194,18 @@ export function ProductFormFields({
           </Button>
         </div>
       </div>
-      <Input
-        label="سعر الشراء (تكلفة المخزون — 0 للخدمات/التفعيل)"
-        type="number"
-        step="0.01"
-        min="0"
-        value={form.buy_price}
-        onChange={(e) => setForm({ ...form, buy_price: e.target.value })}
-        required
-      />
+      <div>
+        <Input
+          label="سعر الشراء (تكلفة المخزون — 0 للخدمات/التفعيل)"
+          type="number"
+          step="0.0001"
+          min="0"
+          value={form.buy_price}
+          onChange={(e) => setForm({ ...form, buy_price: e.target.value })}
+          required
+        />
+        <p className="mt-1 text-xs text-[var(--text-muted)]">يدعم حتى 4 منازل عشرية (مثل 1.2345)</p>
+      </div>
       <div>
         <Input
           label="سعر البيع"

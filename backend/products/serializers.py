@@ -138,7 +138,8 @@ class ProductWriteSerializer(serializers.ModelSerializer):
     def validate_buy_price(self, value):
         if value < 0:
             raise serializers.ValidationError('سعر الشراء لا يمكن أن يكون سالباً.')
-        return value
+        from stores.currency_service import quantize_price
+        return quantize_price(value)
 
     def validate_sell_price(self, value):
         if value < 0:

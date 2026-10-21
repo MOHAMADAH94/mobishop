@@ -70,7 +70,12 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, blank=True)
     barcode = models.CharField(max_length=100, blank=True)
     imei = models.CharField(max_length=20, blank=True)
-    buy_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    buy_price = models.DecimalField(
+        max_digits=14,
+        decimal_places=4,
+        default=0,
+        help_text='سعر الشراء / التكلفة — يدعم حتى 4 منازل عشرية',
+    )
     sell_price = models.DecimalField(
         max_digits=14,
         decimal_places=4,

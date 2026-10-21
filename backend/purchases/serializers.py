@@ -87,7 +87,7 @@ class PurchaseDetailSerializer(PurchaseListSerializer):
 
 
 class RecordPurchasePaymentSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    amount = serializers.DecimalField(max_digits=14, decimal_places=4)
     method = serializers.ChoiceField(choices=PurchasePayment.Method.choices, default='cash')
     notes = serializers.CharField(required=False, allow_blank=True)
 
@@ -106,7 +106,7 @@ class RecordPurchasePaymentSerializer(serializers.Serializer):
 class PurchaseItemInputSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     quantity = serializers.DecimalField(max_digits=14, decimal_places=4, min_value=Decimal('0.0001'))
-    unit_cost = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    unit_cost = serializers.DecimalField(max_digits=14, decimal_places=4, required=False)
 
 
 class PurchaseCreateSerializer(serializers.Serializer):
@@ -116,8 +116,8 @@ class PurchaseCreateSerializer(serializers.Serializer):
     exchange_rate = serializers.DecimalField(
         max_digits=18, decimal_places=6, required=False, allow_null=True,
     )
-    discount = serializers.DecimalField(max_digits=12, decimal_places=2, default=0)
-    amount_paid = serializers.DecimalField(max_digits=12, decimal_places=2, required=False)
+    discount = serializers.DecimalField(max_digits=14, decimal_places=4, default=0)
+    amount_paid = serializers.DecimalField(max_digits=14, decimal_places=4, required=False)
     notes = serializers.CharField(required=False, allow_blank=True)
     client_request_id = serializers.CharField(required=False, allow_blank=True, allow_null=True, max_length=64)
     items = PurchaseItemInputSerializer(many=True)

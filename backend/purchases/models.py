@@ -10,7 +10,7 @@ class Supplier(models.Model):
     phone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
     address = models.TextField(blank=True)
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    balance = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     notes = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -47,11 +47,11 @@ class Purchase(models.Model):
     )
     status = models.CharField(max_length=25, choices=Status.choices, default=Status.COMPLETED)
     payment_method = models.CharField(max_length=20, choices=PaymentMethod.choices, default=PaymentMethod.CASH)
-    subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    discount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    tax_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    subtotal = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    discount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    tax_amount = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    total = models.DecimalField(max_digits=14, decimal_places=4, default=0)
+    amount_paid = models.DecimalField(max_digits=14, decimal_places=4, default=0)
     notes = models.TextField(blank=True)
     client_request_id = models.CharField(
         max_length=64,
@@ -95,8 +95,8 @@ class PurchaseItem(models.Model):
     product_name = models.CharField(max_length=200)
     sku = models.CharField(max_length=50, blank=True)
     quantity = models.DecimalField(max_digits=14, decimal_places=4)
-    unit_cost = models.DecimalField(max_digits=12, decimal_places=2)
-    line_total = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_cost = models.DecimalField(max_digits=14, decimal_places=4)
+    line_total = models.DecimalField(max_digits=14, decimal_places=4)
 
     def save(self, *args, **kwargs):
         self.line_total = self.unit_cost * self.quantity
@@ -113,7 +113,7 @@ class PurchasePayment(models.Model):
 
     store = models.ForeignKey('stores.Store', on_delete=models.CASCADE, related_name='purchase_payments')
     purchase = models.ForeignKey(Purchase, on_delete=models.CASCADE, related_name='payments')
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=4)
     method = models.CharField(max_length=20, choices=Method.choices, default=Method.CASH)
     notes = models.CharField(max_length=255, blank=True)
     created_by = models.ForeignKey(

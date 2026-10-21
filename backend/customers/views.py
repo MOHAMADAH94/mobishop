@@ -32,7 +32,10 @@ class CustomerViewSet(StoreOwnerMixin, viewsets.ModelViewSet):
         return CustomerListSerializer
 
     def get_permissions(self):
-        if self.action in ('create', 'update', 'partial_update', 'destroy', 'record_payment'):
+        # إنشاء عميل سريع مسموح من نقطة البيع (pos) أو إدارة العملاء
+        if self.action == 'create':
+            return [IsAuthenticated(), HasStoreAccess(), HasPermission('customers', 'pos')()]
+        if self.action in ('update', 'partial_update', 'destroy', 'record_payment'):
             return [IsAuthenticated(), HasStoreAccess(), HasPermission('customers')()]
         return super().get_permissions()
 

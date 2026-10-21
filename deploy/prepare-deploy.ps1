@@ -52,11 +52,11 @@ Mobishop build $buildId
 Frontend bundle: $jsName
 
 === This build ===
-POS payment totals/amounts now up to 4dp (was stuck at 2dp)
-Sale money fields + customer.debt: decimal_places=4
-Sell price + qty precision up to 4dp
+Buy price (cost) up to 4 decimals + purchase unit_cost/totals 4dp
+POS: quick customer create for credit/deferred sales (pos permission OK)
+Sell price + POS payment totals up to 4dp; qty precision up to 4
 Migrations REQUIRED:
-  products.0011+0012, sales.0011+0012+0013, purchases.0006, customers.0004
+  products.0011-0013, sales.0011-0014, purchases.0006-0007, customers.0004
 
 === Modules ===
 Core: POS, products, inventory, customers, suppliers, purchases, repairs, expenses, multi-currency, roles, cashbox

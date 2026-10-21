@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search, Trash2, Smartphone, Plus, ScanBarcode } from 'lucide-react'
+import { Search, Trash2, Smartphone, Plus, ScanBarcode, UserPlus } from 'lucide-react'
 import { api, getErrorMessage } from '../../api/client'
 import { Button } from '../../components/ui/Button'
 import { Input } from '../../components/ui/Input'
 import { Card } from '../../components/ui/Card'
+import { Modal } from '../../components/ui/Modal'
 import { BarcodeScannerModal } from '../../components/barcode/BarcodeScannerModal'
 import { useToastStore } from '../../stores/toastStore'
 import { useCurrentStore, useStoreVersion } from '../../hooks/useCurrentStore'
@@ -29,17 +30,13 @@ import {
   cachedProductToProduct,
   getCachedCustomers,
   lookupCachedProduct,
+  putCachedCustomer,
   searchCachedProducts,
 } from '../../offline/cache'
-import { enqueueSale } from '../../offline/outbox'
+import { enqueueOperation, enqueueSale, newClientRequestId } from '../../offline/outbox'
 import { applyLocalSaleQty, refreshOfflineCaches } from '../../offline/sync'
 import { useOnlineStatus } from '../../offline/useOfflineSync'
 import type { Customer, Product, Sale, SalePaymentMethod, StoreCurrenciesResponse } from '../../types'
-
-function newClientRequestId() {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID()
-  return `pos-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
 
 const TENDER_METHODS: { id: SalePaymentMethod; label: string }[] = [
   { id: 'cash', label: 'نقدي' },
@@ -99,6 +96,9 @@ export function POSPage() {
   const [taxRate, setTaxRate] = useState(15)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [lookupLoading, setLookupLoading] = useState(false)
+  const [quickCustomerOpen, setQuickCustomerOpen] = useState(false)
+  const [quickCustomerForm, setQuickCustomerForm] = useState({ name: '', phone: '' })
+  const [quickCustomerLoading, setQuickCustomerLoading] = useState(false)
 
   const searchProducts = useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -348,6 +348,93 @@ export function POSPage() {
     if (e.key === 'Enter' && query.trim()) {
       e.preventDefault()
       resolveProductCode(query)
+    }
+  }
+
+  const openQuickCustomer = () => {
+    setQuickCustomerForm({ name: '', phone: '' })
+    setQuickCustomerOpen(true)
+  }
+
+  const createQuickCustomer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const name = quickCustomerForm.name.trim()
+    const phone = quickCustomerForm.phone.trim()
+    if (!name) {
+      toast('أدخل اسم العميل', 'error')
+      return
+    }
+    if (!phone) {
+      toast('أدخل رقم هاتف العميل', 'error')
+      return
+    }
+    setQuickCustomerLoading(true)
+    const clientRequestId = newClientRequestId()
+    try {
+      if (!navigator.onLine) {
+        if (!store?.id) {
+          toast('لا يمكن إضافة عميل دون متجر', 'error')
+          return
+        }
+        const tempId = -Date.now()
+        await enqueueOperation({
+          storeId: store.id,
+          operation: 'customer.create',
+          method: 'POST',
+          path: '/customers/',
+          payload: { name, phone },
+          localLabel: `عميل: ${name}`,
+          clientRequestId,
+          localTempId: tempId,
+        })
+        await putCachedCustomer(store.id, {
+          id: tempId,
+          storeId: store.id,
+          name,
+          phone,
+          debt: '0',
+          is_active: true,
+        })
+        const created: Customer = {
+          id: tempId,
+          name,
+          phone,
+          email: '',
+          debt: '0',
+          is_active: true,
+        }
+        setCustomers((prev) => [created, ...prev.filter((c) => c.id !== created.id)])
+        setCustomerId(String(created.id))
+        setAllowCredit(true)
+        setQuickCustomerOpen(false)
+        toast('حُفظ العميل محلياً — سيُزامَن عند الاتصال', 'success')
+        return
+      }
+
+      const { data } = await api.post<Customer>('/customers/', {
+        name,
+        phone,
+        client_request_id: clientRequestId,
+      })
+      setCustomers((prev) => [data, ...prev.filter((c) => c.id !== data.id)])
+      setCustomerId(String(data.id))
+      setAllowCredit(true)
+      setQuickCustomerOpen(false)
+      if (store?.id) {
+        await putCachedCustomer(store.id, {
+          id: data.id,
+          storeId: store.id,
+          name: data.name,
+          phone: data.phone || '',
+          debt: String(data.debt || '0'),
+          is_active: data.is_active !== false,
+        })
+      }
+      toast('تم إضافة العميل', 'success')
+    } catch (err) {
+      toast(getErrorMessage(err), 'error')
+    } finally {
+      setQuickCustomerLoading(false)
     }
   }
 
@@ -752,7 +839,19 @@ export function POSPage() {
           <h3 className="mb-4 font-semibold">الدفع</h3>
           <div className="space-y-4">
             <div className="min-w-0">
-              <label className="text-sm text-[var(--text-muted)]">العميل</label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-sm text-[var(--text-muted)]">العميل</label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onClick={openQuickCustomer}
+                  className="shrink-0"
+                >
+                  <UserPlus className="h-4 w-4" />
+                  عميل جديد
+                </Button>
+              </div>
               <select
                 value={customerId}
                 onChange={(e) => setCustomerId(e.target.value)}
@@ -908,7 +1007,13 @@ export function POSPage() {
                 </span>
               </label>
               {hasCredit && !customerId && (
-                <p className="text-xs text-amber-600">اختر عميلاً لتسجيل المتبقي على حسابه</p>
+                <div className="flex flex-wrap items-center gap-2 rounded-xl border border-amber-300/60 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <span>اختر عميلاً لتسجيل المتبقي على حسابه</span>
+                  <Button type="button" size="sm" variant="secondary" onClick={openQuickCustomer}>
+                    <UserPlus className="h-3.5 w-3.5" />
+                    إضافة سريعة
+                  </Button>
+                </div>
               )}
               {hasCredit && (
                 <p className="text-xs text-[var(--text-muted)]">
@@ -948,6 +1053,47 @@ export function POSPage() {
         onScan={resolveProductCode}
         title="مسح باركود أو IMEI للبيع"
       />
+      <Modal
+        open={quickCustomerOpen}
+        onClose={() => !quickCustomerLoading && setQuickCustomerOpen(false)}
+        title="إضافة عميل سريع"
+        size="sm"
+      >
+        <form onSubmit={createQuickCustomer} className="space-y-4">
+          <p className="text-sm text-[var(--text-muted)]">
+            أضف عميلاً بسرعة لإتمام البيع الآجل دون مغادرة نقطة البيع.
+          </p>
+          <Input
+            label="الاسم"
+            value={quickCustomerForm.name}
+            onChange={(e) => setQuickCustomerForm((f) => ({ ...f, name: e.target.value }))}
+            required
+            autoFocus
+            placeholder="اسم العميل"
+          />
+          <Input
+            label="الهاتف"
+            value={quickCustomerForm.phone}
+            onChange={(e) => setQuickCustomerForm((f) => ({ ...f, phone: e.target.value }))}
+            required
+            placeholder="رقم الهاتف"
+            inputMode="tel"
+          />
+          <div className="flex gap-2">
+            <Button type="submit" loading={quickCustomerLoading} className="flex-1">
+              حفظ واختيار
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={quickCustomerLoading}
+              onClick={() => setQuickCustomerOpen(false)}
+            >
+              إلغاء
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   )
 }
